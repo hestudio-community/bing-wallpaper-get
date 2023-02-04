@@ -1,5 +1,6 @@
 const { default: axios } = require('axios');
 const express = require('express')
+const request = require('request')
 const app = express()
 const port = 3000
 const XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest;
@@ -13,6 +14,7 @@ app.get('/getimage', (req, res) => {
         var r = xhr.responseText;
         var bingsrc = JSON.parse(r);
         let url = "https://cn.bing.com"+bingsrc.images[0].url
+	console.log(url)
         if(url.startsWith('http')){
           const options = {
             url,
