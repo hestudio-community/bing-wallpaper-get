@@ -24,24 +24,17 @@ app.get('/getimage', (req, res) => {
         var r = xhr.responseText;
         var bingsrc = JSON.parse(r);
         let url = "https://cn.bing.com"+bingsrc.images[0].url
-        if(url.startsWith('http')){
-          const options = {
-            url,
-            method:"GET",
-            //headers: req.headers    //如果需要设置请求头，就加上
-          }
-          request(options, function (error, response, body) {
+        request(url, function (error, response, body) {
             if (!error && response.statusCode === 200) {
           //拿到实际请求返回的响应头，根据具体需求来设置给原来的响应头
               let headers = response.headers;
               res.setHeader('content-type',headers['content-type']);
               res.send(body);
-            } else {
-              res.send(options);
             }
+	   
           });
         }
-      }
+      
     }
 })
 app.listen(port, () => {
