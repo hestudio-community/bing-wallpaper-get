@@ -12,15 +12,24 @@ app.get('/getimage', (req, res) => {
       if (xhr.readyState == 4 && xhr.status == 200) {
         var r = xhr.responseText;
         var bingsrc = JSON.parse(r);
-        axios({
-          method: "get",
-          url: "https://cn.bing.com"+bingsrc.images[0].url,
-          responseType: 'stream'
-        })
-        .then(function (response) {
-          var img = response.data
-          res.send(img)
-        });
+        let url = "https://cn.bing.com"+bingsrc.images[0].url
+        if(url.startsWith('http')){
+          const options = {
+            url,
+            method:"GET",
+            //headers: req.headers    //如果需要设置请求头，就加上
+          }
+          request(options, function (error, response, body) {
+            if (!error && response.statusCode === 200) {
+          //拿到实际请求返回的响应头，根据具体需求来设置给原来的响应头
+              let headers = response.headers;
+              res.setHeader('content-type',headers['content-type']);
+              res.send(body);
+            } else {
+              res.send(options);
+            }
+          });
+        }
       }
     }
 })
