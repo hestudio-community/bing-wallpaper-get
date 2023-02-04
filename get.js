@@ -4,6 +4,16 @@ const request = require('request')
 const app = express()
 const port = 3000
 const XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest;
+
+// 允许跨域
+app.all('*', function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", '*');
+  res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");
+  res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Credentials","true");
+  if(req.method === "OPTIONS") res.send(200);
+  else  next();
+});
  
 app.get('/getimage', (req, res) => {
     const xhr = new XMLHttpRequest();
@@ -14,7 +24,6 @@ app.get('/getimage', (req, res) => {
         var r = xhr.responseText;
         var bingsrc = JSON.parse(r);
         let url = "https://cn.bing.com"+bingsrc.images[0].url
-	console.log(url)
         if(url.startsWith('http')){
           const options = {
             url,
