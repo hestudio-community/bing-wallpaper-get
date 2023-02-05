@@ -16,6 +16,7 @@ Get /gettitle
 ```
 
 返回参数：
+
 | 参数 | 说明 |
 |---|---|
 | `title` | 标题 |
@@ -26,8 +27,9 @@ GET /getcopyright
 ```
 
 返回参数：
+
 | 参数 | 说明 |
-|–––|–––|
+|---|---|
 | `copyright` | 版权信息 |
 | `copyrightlink` | 版权信息所对应的链接 |
 
