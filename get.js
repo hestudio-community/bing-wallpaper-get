@@ -23,7 +23,7 @@ function cacheimg() {
   };
 };
 
-var job = new CronJob('0 0 * * *', cacheimg());
+var job = new CronJob('0 16 * * *', cacheimg());
 job.start();
 
 cacheimg();

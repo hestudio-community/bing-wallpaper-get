@@ -36,7 +36,7 @@ GET /getcopyright
 ### 安装方法
 #### Docker部署 (推荐)
 ```shell
-docker pull registry.cn-hangzhou.aliyuncs.com/hestudio/hestudio_bing_wallpaper_get:1.1.0
+docker pull registry.cn-hangzhou.aliyuncs.com/hestudio/hestudio_bing_wallpaper_get:1.1.1
 ```
 #### NPM安装
 ```shell
