@@ -19,12 +19,12 @@ GET /getimage
 ### 安装方法
 #### Docker部署 (推荐)
 ```shell
-docker pull registry.cn-hangzhou.aliyuncs.com/hestudio/hestudio_bing_wallpaper_get
+docker pull registry.cn-hangzhou.aliyuncs.com/hestudio/hestudio_bing_wallpaper_get:1.0.0
 ```
 #### NPM安装
 ```shell
 npm i hestudio-bing-wallpaper-get
-node node_modules/hestudio-bing-wallpaper-get/get.js
+cd node_modules/hestudio-bing-wallpaper-get/ && npm run server
 ```
 
 #### 手动安装
