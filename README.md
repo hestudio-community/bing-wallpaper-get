@@ -7,6 +7,9 @@
 - [ ] Linux 安装包
 - [ ] Windows 安装包
 
+### demo
+![这是一张自动更换的图片](https://hbwg.hestudio.org/getimage)
+
 ### 调用方法
 运行端口在`3000`
 ```
