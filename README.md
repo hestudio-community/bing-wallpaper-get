@@ -8,11 +8,16 @@
 - [ ] Windows 安装包
 
 ### 调用方法
+运行端口在`3000`
 ```
 GET /getimage
 ```
 
 ### 安装方法
+#### Docker部署 (推荐)
+```shell
+docker pull registry.cn-hangzhou.aliyuncs.com/hestudio/hestudio_bing_wallpaper_get
+```
 #### NPM安装
 ```shell
 npm i hestudio-bing-wallpaper-get
