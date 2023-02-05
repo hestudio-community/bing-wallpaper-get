@@ -1,9 +1,7 @@
-// const fs = require('fs');
 const express = require('express')
-const cron = require("node-cron");
+const CronJob = require('cron').CronJob
 const path = require('path');
 const shell = require("shelljs");
-// const request = require('request')
 const app = express()
 const port = 3000
 const XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest;
@@ -22,6 +20,10 @@ function downimg() {
     }
   }
 
+var job = new CronJob('0 0 * * *', downimg())
+job.start()
+
+downimg()
 
 // 允许跨域
 app.all('*', function(req,
@@ -35,9 +37,9 @@ app.all('*', function(req,
 });
  
 app.get('/getimage', (req, res) => {
-  downimg()
   res.sendFile(path.join(__dirname, 'image.jpg'))
 })
+
 app.listen(port, () => {
   console.log(`heStudio BingWallpaper Get is running on localhost:${port}`)
 })
