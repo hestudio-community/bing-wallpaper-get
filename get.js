@@ -1,5 +1,5 @@
 const express = require('express');
-const CronJob = require('cron').CronJob;
+const schedule = require('node-schedule');
 const path = require('path');
 const shell = require("shelljs");
 const app = express();
@@ -23,8 +23,30 @@ function cacheimg() {
   };
 };
 
-var job = new CronJob('0 16 * * *', cacheimg());
-job.start();
+// 定时
+let rule = new schedule.RecurrenceRule();
+// rule.hour =0;
+// rule.minute =0;
+// rule.second =0;
+rule.second = 0;
+rule.tz = 'Asia/Shanghai';
+
+let job = schedule.scheduleJob(rule, function () {
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN');
+  xhr.send();
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState == 4 && xhr.status == 200) {
+      var r = xhr.responseText;
+      var bingsrc = JSON.parse(r);
+      var url = "https://cn.bing.com" + bingsrc.images[0].url;
+      shell.exec('wget -O image.jpg ' + url);
+      global.copyright = bingsrc.images[0].copyright;
+      global.copyrightlink = bingsrc.images[0].copyrightlink;
+      global.title = bingsrc.images[0].title;
+    };
+  };
+});
 
 cacheimg();
 
