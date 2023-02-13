@@ -25,9 +25,8 @@ function cacheimg() {
 
 // 定时
 let rule = new schedule.RecurrenceRule();
-// rule.hour =0;
-// rule.minute =0;
-// rule.second =0;
+rule.hour =0;
+rule.minute =0;
 rule.second = 0;
 rule.tz = 'Asia/Shanghai';
 
