@@ -43,6 +43,7 @@ let job = schedule.scheduleJob(rule, function () {
       global.copyright = bingsrc.images[0].copyright;
       global.copyrightlink = bingsrc.images[0].copyrightlink;
       global.title = bingsrc.images[0].title;
+      console.log("Refresh Successfully!")
     };
   };
 });
@@ -62,12 +63,14 @@ app.all('*', function (req,
 
 app.get('/getimage', (req, res) => {
   res.sendFile(path.join(__dirname, 'image.jpg'));
+  console.log(req.ip+" used this image API.")
 });
 
 app.get('/gettitle', (req, res) => {
   res.send({
     title: global.title
   });
+  console.log(req.ip+" used this title API.")
 });
 
 app.get('/getcopyright', (req, res) => {
@@ -75,6 +78,7 @@ app.get('/getcopyright', (req, res) => {
     copyright: global.copyright,
     copyrightlink: global.copyrightlink
   })
+  console.log(req.ip+" used this copyright API.")
 });
 
 app.listen(port, () => {

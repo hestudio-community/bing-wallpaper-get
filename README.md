@@ -12,7 +12,7 @@ GET /getimage
 
 #### 获取图片标题
 ```
-Get /gettitle
+GET /gettitle
 ```
 
 返回参数：
