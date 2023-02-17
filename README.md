@@ -36,7 +36,8 @@ GET /getcopyright
 ### 安装方法
 #### Docker部署 (推荐)
 ```shell
-docker pull registry.cn-hangzhou.aliyuncs.com/hestudio/hestudio_bing_wallpaper_get:1.1.3
+docker pull hestudio/bingwallpaper_get
+docker run -d -p 3000:3000 hestudio/bingwallpaper_get
 ```
 #### NPM安装
 ```shell
@@ -48,6 +49,7 @@ cd node_modules/hestudio-bingwallpaper-get/ && npm run server
 ```shell
 git clone https://gitlab.com/heStudio/bing-wallpaper-get.git
 cd bing-wallpaper-get
+npm install
 npm run server
 ```
 
