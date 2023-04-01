@@ -5,6 +5,7 @@ const shell = require("shelljs");
 const app = express();
 const port = 3000;
 const XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest;
+const dayjs = require('dayjs');
 
 function cacheimg() {
   const xhr = new XMLHttpRequest();
@@ -61,16 +62,18 @@ app.all('*', function (req,
   else next();
 });
 
+// 主程序
+
 app.get('/getimage', (req, res) => {
   res.sendFile(path.join(__dirname, 'image.jpg'));
-  console.log(req.ip+" used this image API.")
+  console.log('['+dayjs().format('YYYY-MM-DD HH:mm:ss')+'] '+req.ip+" used this image API.")
 });
 
 app.get('/gettitle', (req, res) => {
   res.send({
     title: global.title
   });
-  console.log(req.ip+" used this title API.")
+  console.log('['+dayjs().format('YYYY-MM-DD HH:mm:ss')+'] '+req.ip+" used this title API.")
 });
 
 app.get('/getcopyright', (req, res) => {
@@ -78,9 +81,9 @@ app.get('/getcopyright', (req, res) => {
     copyright: global.copyright,
     copyrightlink: global.copyrightlink
   })
-  console.log(req.ip+" used this copyright API.")
+  console.log('['+dayjs().format('YYYY-MM-DD HH:mm:ss')+'] '+req.ip+" used this copyright API.")
 });
 
 app.listen(port, () => {
-  console.log(`heStudio BingWallpaper Get is running on localhost:${port}`)
+  console.log('['+dayjs().format('YYYY-MM-DD HH:mm:ss')+'] '+'heStudio BingWallpaper Get is running on localhost:${port}')
 });
