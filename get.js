@@ -85,5 +85,5 @@ app.get('/getcopyright', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log('['+dayjs().format('YYYY-MM-DD HH:mm:ss')+'] '+'heStudio BingWallpaper Get is running on localhost:${port}')
+  console.log('['+dayjs().format('YYYY-MM-DD HH:mm:ss')+'] '+`heStudio BingWallpaper Get is running on localhost:${port}`)
 });
