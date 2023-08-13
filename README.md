@@ -1,6 +1,6 @@
 # heStudio BingWallpaper Get
 
-### Demo
+### Demo 和详细文档
 详见 https://www.hestudio.org/docs/hestudio_bing_wallpaper_get.html
 
 ### 调用方法
@@ -38,11 +38,6 @@ GET /getcopyright
 ```shell
 docker pull hestudio/bingwallpaper_get
 docker run -d -p 3000:3000 hestudio/bingwallpaper_get
-```
-#### NPM安装
-```shell
-npm i hestudio-bingwallpaper-get
-cd node_modules/hestudio-bingwallpaper-get/ && npm run server
 ```
 
 #### 手动安装
