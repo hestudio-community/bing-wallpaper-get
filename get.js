@@ -10,9 +10,26 @@ const port = 3000;
 const XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest;
 const dayjs = require('dayjs');
 
+const getback = (ip, path) => {
+  console.log('[' + dayjs().format('YYYY-MM-DD HH:mm:ss') + '] ' + ip + " GET " + path)
+}
 
-if (fs.existsSync('external.js')) {
-  const external = require('./external')
+const logback = (log) => {
+  console.log('[' + dayjs().format('YYYY-MM-DD HH:mm:ss') + '] ' + log)
+}
+
+const logerr = (err) => {
+  console.error('[' + dayjs().format('YYYY-MM-DD HH:mm:ss') + '] ' + err)
+}
+
+if (process.env["hbwg_external"]) {
+  const external = require(process.env["hbwg_external"])
+  global.external = external
+  logback('An external file has been imported.')
+} else if (fs.existsSync('./external.js')) {
+  const external = require('./external.js')
+  global.external = external
+  logback('An external file has been imported.')
 }
 
 if (process.env["hbwg_host"]) {
@@ -64,7 +81,7 @@ let job = schedule.scheduleJob(rule, function () {
       global.copyright = bingsrc.images[0].copyright;
       global.copyrightlink = bingsrc.images[0].copyrightlink;
       global.title = bingsrc.images[0].title;
-      console.log("Refresh Successfully!")
+      logback("Refresh Successfully!")
     };
   };
 });
@@ -82,15 +99,13 @@ app.all('*', function (req,
   else next();
 });
 
-const getback = (ip, path) => {
-  console.log('[' + dayjs().format('YYYY-MM-DD HH:mm:ss') + '] ' + ip + " GET " + path)
-}
 
 // 主程序
 app.get('/', (req, res) => {
   var ip = req.headers['x-real-ip']
   if (typeof external !== 'undefined') {
     if (external.rootprogram) {
+      logback('An external file is being used.')
       external.rootprogram(req, res)
     } else {
       res.redirect("https://www.hestudio.net/docs/hestudio_bing_wallpaper_get.html")
@@ -103,7 +118,13 @@ app.get('/', (req, res) => {
 
 app.get('/getimage', (req, res) => {
   var ip = req.headers['x-real-ip']
-  res.sendFile(path.join(__dirname, 'image.jpg'));
+  if (fs.existsSync("./image.jpg")) {
+    res.sendFile(path.join(__dirname, 'image.jpg'));
+  } else if (fs.existsSync("./node_modules/hestudio-bingwallpaper-get/image.jpg")) {
+    res.sendFile(path.join(__dirname, './node_modules/hestudio-bingwallpaper-get/image.jpg'))
+  } else {
+    logerr('image.jpg not found.')
+  }
   getback(ip, "/getimage")
 });
 
@@ -125,5 +146,5 @@ app.get('/getcopyright', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log('[' + dayjs().format('YYYY-MM-DD HH:mm:ss') + '] ' + `heStudio BingWallpaper Get is running on localhost:${port}`)
+  logback(`heStudio BingWallpaper Get is running on localhost:${port}`)
 });
