@@ -121,7 +121,7 @@ app.all('*', function (req,
 // 主程序
 app.get('/', (req, res) => {
   var head_ip = req.headers['x-real-ip']
-  if (head_ip = "undefined") {
+  if (head_ip == "undefined") {
     ip = req.ip
   } else {
     ip = head_ip
@@ -141,7 +141,7 @@ app.get('/', (req, res) => {
 
 app.get('/getimage', (req, res) => {
   var head_ip = req.headers['x-real-ip']
-  if (head_ip = "undefined") {
+  if (head_ip == "undefined") {
     ip = req.ip
   } else {
     ip = head_ip
@@ -152,7 +152,7 @@ app.get('/getimage', (req, res) => {
 
 app.get('/gettitle', (req, res) => {
   var head_ip = req.headers['x-real-ip']
-  if (head_ip = "undefined") {
+  if (head_ip == "undefined") {
     ip = req.ip
   } else {
     ip = head_ip
@@ -165,7 +165,7 @@ app.get('/gettitle', (req, res) => {
 
 app.get('/getcopyright', (req, res) => {
   var head_ip = req.headers['x-real-ip']
-  if (head_ip = "undefined") {
+  if (head_ip == "undefined") {
     ip = req.ip
   } else {
     ip = head_ip
