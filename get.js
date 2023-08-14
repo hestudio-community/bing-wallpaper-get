@@ -6,9 +6,14 @@ const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const app = express();
-const port = 3000;
 const XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest;
 const dayjs = require('dayjs');
+
+if (process.env["hbwg_port"]) {
+  port = process.env["hbwg_port"]
+} else {
+  port = 3000
+}
 
 const getback = (ip, path) => {
   console.log('[' + dayjs().format('YYYY-MM-DD HH:mm:ss') + '] ' + ip + " GET " + path)
@@ -63,10 +68,23 @@ function cacheimg() {
 
 // 定时
 let rule = new schedule.RecurrenceRule();
-rule.hour = 0;
-rule.minute = 0;
-rule.second = 0;
-rule.tz = 'Asia/Shanghai';
+
+if (typeof external !== 'undefined') {
+  if (external.refreshtime) {
+    logback('An external file is being used.')
+    external.refreshtime(rule)
+  } else {
+    rule.hour = 0;
+    rule.minute = 0;
+    rule.second = 0;
+    rule.tz = 'Asia/Shanghai';
+  }
+} else {
+  rule.hour = 0;
+  rule.minute = 0;
+  rule.second = 0;
+  rule.tz = 'Asia/Shanghai';
+}
 
 let job = schedule.scheduleJob(rule, function () {
   const xhr = new XMLHttpRequest();
@@ -102,7 +120,12 @@ app.all('*', function (req,
 
 // 主程序
 app.get('/', (req, res) => {
-  var ip = req.headers['x-real-ip']
+  var head_ip = req.headers['x-real-ip']
+  if (head_ip = "undefined") {
+    ip = req.ip
+  } else {
+    ip = head_ip
+  }
   if (typeof external !== 'undefined') {
     if (external.rootprogram) {
       logback('An external file is being used.')
@@ -117,19 +140,23 @@ app.get('/', (req, res) => {
 })
 
 app.get('/getimage', (req, res) => {
-  var ip = req.headers['x-real-ip']
-  if (fs.existsSync("./image.jpg")) {
-    res.sendFile(path.join(__dirname, 'image.jpg'));
-  } else if (fs.existsSync("./node_modules/hestudio-bingwallpaper-get/image.jpg")) {
-    res.sendFile(path.join(__dirname, './node_modules/hestudio-bingwallpaper-get/image.jpg'))
+  var head_ip = req.headers['x-real-ip']
+  if (head_ip = "undefined") {
+    ip = req.ip
   } else {
-    logerr('image.jpg not found.')
+    ip = head_ip
   }
+  res.sendFile(path.join(process.cwd(), 'image.jpg'));
   getback(ip, "/getimage")
 });
 
 app.get('/gettitle', (req, res) => {
-  var ip = req.headers['x-real-ip']
+  var head_ip = req.headers['x-real-ip']
+  if (head_ip = "undefined") {
+    ip = req.ip
+  } else {
+    ip = head_ip
+  }
   res.send({
     title: global.title
   });
@@ -137,13 +164,25 @@ app.get('/gettitle', (req, res) => {
 });
 
 app.get('/getcopyright', (req, res) => {
-  var ip = req.headers['x-real-ip']
+  var head_ip = req.headers['x-real-ip']
+  if (head_ip = "undefined") {
+    ip = req.ip
+  } else {
+    ip = head_ip
+  }
   res.send({
     copyright: global.copyright,
     copyrightlink: global.copyrightlink
   })
   getback(ip, "/getcopyright")
 });
+
+if (typeof external !== 'undefined') {
+  if (external.beforestart) {
+    logback('An external file is being used.')
+    external.beforestart(app, getback, logback, logerr)
+  }
+}
 
 app.listen(port, () => {
   logback(`heStudio BingWallpaper Get is running on localhost:${port}`)
