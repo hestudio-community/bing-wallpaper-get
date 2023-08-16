@@ -1,3 +1,13 @@
+1.2.4
+1. 项目代码规范化
+2. 修复通过npm安装下, 在默认位置导入external.js后无法读取
+3. 修复在未使用反代的情况下无法读取IP地址并显示undefined
+4. 提供postback()日志接口
+5. 修改logerr()接口输出形式
+6. 修改外置接口rootprogram()
+7. 修改外置接口beforestart()
+
+
 1.2.3
 1. 修复在反代时ip显示问题
 
