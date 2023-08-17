@@ -1,6 +1,6 @@
 {
   "name": "hestudio-bingwallpaper-get",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "A Bing wallpaper API interface that can directly image output images.",
   "main": "get.js",
   "scripts": {
@@ -10,12 +10,32 @@
     "type": "git",
     "url": "git+https://gitlab.com/heStudio/bing-wallpaper-get.git"
   },
-  "author": "heStudio",
+  "author": {
+    "name": "heStudio",
+    "email": "hestudio@hestudio.net",
+    "url": "https://www.hestudio.net/about"
+  },
   "license": "MIT",
   "bugs": {
-    "url": "https://gitlab.com/heStudio/bing-wallpaper-get/issues"
+    "url": "https://gitlab.com/heStudio/bing-wallpaper-get/issues",
+    "email": "hestudio@hestudio.net"
   },
   "homepage": "https://www.hestudio.net/docs/hestudio_bing_wallpaper_get.html",
+  "keywords": [
+    "hestudio",
+    "bingwallpaper",
+    "bing",
+    "wallpaper",
+    "api"
+  ],
+  "contributors": [
+    "醉、倾城"
+  ],
+  "displayName": "heStudio BingWallpaper Get",
+  "os": [
+    "linux"
+  ],
+  "publisher": "醉、倾城",
   "dependencies": {
     "dayjs": "^1.11.7",
     "dotenv": "^16.3.1",

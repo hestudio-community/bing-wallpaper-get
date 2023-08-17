@@ -32,7 +32,7 @@ const logback = (log) => {
 }
 
 const logerr = (err) => {
-  console.error('[' + dayjs().format('YYYY-MM-DD HH:mm:ss') + '] ' + err)
+  console.error('[' + dayjs().format('YYYY-MM-DD HH:mm:ss') + '] ERROR: ' + err)
 }
 
 if (process.env.hbwg_external) {

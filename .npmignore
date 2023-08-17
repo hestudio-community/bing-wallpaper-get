@@ -2,3 +2,6 @@
 .gitpod.yml
 .eslintrc.json
 Dockerfile
+external.js
+image.jpg
+.env
