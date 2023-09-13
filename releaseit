@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ -z $1]]; then
+if [[ -z $1 ]] then
     echo 'No Version Code.Please run it with your version code.'
 else
     git push
