@@ -12,9 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     name:  Build Docker Image
     steps:
-    - run: docker login --username ${DOCKER_USERNAME} --password ${DOCKER_PASSWORD}
-    - run: docker build . --file Dockerfile --tag hestudio/bingwallpaper_get:${GITHUB_REF}
+    - uses: actions/checkout@v3
+    - run: docker login --username ${{env.DOCKER_USERNAME}} --password ${{ secrets.DOCKER_PASSWORD}}
+    - run: docker build . --file Dockerfile --tag hestudio/bingwallpaper_get:${{github.REF}}
     - run: docker build . --file Dockerfile --tag hestudio/bingwallpaper_get
-    - run: docker push hestudio/bingwallpaper_get:${GITHUB_REF}
+    - run: docker push hestudio/bingwallpaper_get:${{github.REF}}
     - run: docker push hestudio/bingwallpaper_get
     
