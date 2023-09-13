@@ -7,5 +7,5 @@ else
     git tag $1
     git push --tag
     npm publish
-    echo 'Release Successfully!
+    echo 'Release Successfully!'
 fi
