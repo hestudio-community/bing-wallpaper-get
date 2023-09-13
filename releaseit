@@ -4,8 +4,8 @@ if [[ -z $1 ]]; then
     echo 'No Version Code.Please run it with your version code.'
 else
     git push
+    npm publish
     git tag $1
     git push --tag
-    npm publish
     echo 'Release Successfully!'
 fi
