@@ -1,15 +1,16 @@
 name: Docker Image CI
 
 on:
-  label:
-    types: [created]
+  push:
+    tags:
+      - '*'
 
 jobs:
 
   build:
 
     runs-on: ubuntu-latest
-
+    name:  Build Docker Image
     steps:
     - uses: actions/checkout@v3
     - run: docker login --username ${DOCKER_USERNAME} --password ${DOCKER_PASSWORD}
