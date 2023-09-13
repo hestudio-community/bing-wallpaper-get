@@ -1,49 +1,51 @@
+1.2.6
+There are no updates this time, just some trivial things that have nothing to do with the functionality of the code.
+
 1.2.5
-1. 修复构建问题
-2. 修改logerr()接口输出形式
+ 1. Fix build issues
+ 2. Modify the logerr() interface output form
 
-1.2.4
-1. 项目代码规范化
-2. 修复通过npm安装下, 在默认位置导入external.js后无法读取
-3. 修复在未使用反代的情况下无法读取IP地址并显示undefined
-4. 提供postback()日志接口
-5. 修改logerr()接口输出形式 # 未构建，将在下个版本构建
-6. 修改外置接口rootprogram()
-7. 修改外置接口beforestart()
+ 1.2.4
+ 1. Project code standardization
+ 2. Fixed the issue where external.js cannot be read after being imported into the default location when installed through npm.
+ 3. Fixed the problem that the IP address cannot be read and undefined is displayed when anti-generation is not used.
+ 4. Provide postback() log interface
+ 5. Modify the logerr() interface output form # Not built, will be built in the next version
+ 6. Modify the external interface rootprogram()
+ 7. Modify the external interface beforestart()
 
 
-1.2.3
-1. 修复在反代时ip显示问题
+ 1.2.3
+ 1. Fix the IP display problem during reverse generation
 
-1.2.2
-1. 修复npm用户无法读取图片的问题
-2. 允许通过环境变量修改端口
-3. 允许在程序运行前插入外部代码
-4. 修复ip本地部署时显示undefined的问题
-5. 允许自定义刷新时间
+ 1.2.2
+ 1. Fix the problem that npm users cannot read images
+ 2. Allow port modification through environment variables
+ 3. Allow external code to be inserted before the program is run
+ 4. Fixed the issue where undefined is displayed when IP is deployed locally.
+ 5. Allow custom refresh time
 
-1.2.1
-1. 修复外部文件调用问题
-2. 优化通过npm使用的体验
+ 1.2.1
+ 1. Fix external file calling problem
+ 2. Optimize the experience of using npm
 
-1.2.0
-1. 修复ip地址显示错误问题
-2. 开放自定义接口调用主机
-3. 开放自定义接口参数
-4. 定义调用根路径后的反应
+ 1.2.0
+ 1. Fix the problem of IP address display error
+ 2. Open a custom interface to call the host
+ 3. Open custom interface parameters
+ 4. Define the reaction after calling the root path
 
-1.1.6
-1. 修复日志不显示端口
+ 1.1.6
+ 1. Fixed the problem that the log does not display the port
 
-1.1.5 
-1. 新增时间显示
+ 1.1.5
+ 1. Added time display
 
-1.1.4 
-1. 新增调用日志返回
+ 1.1.4
+ 1. Added call log return
 
-1.1.1 
-1. 修复时区的问题导致调用延迟
+ 1.1.1
+ 1. Fixed time zone issue causing call delay
 
-1.1.0 
-1. 更新版权信息和标题输出
-
+ 1.1.0
+ 1. Update copyright information and title output

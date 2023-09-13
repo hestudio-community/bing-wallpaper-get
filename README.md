@@ -42,7 +42,7 @@ docker run -d -p 3000:3000 hestudio/bingwallpaper_get
 
 #### 手动安装
 ```sh
-git clone https://gitlab.com/heStudio/bing-wallpaper-get.git
+git clone https://github.com/hestudio-community/bing-wallpaper-get.git
 cd bing-wallpaper-get
 npm install
 npm run server
