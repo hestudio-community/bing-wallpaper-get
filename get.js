@@ -1,5 +1,7 @@
 require('dotenv').config()
 
+const VERSION = '1.3.0'
+
 const express = require('express')
 const schedule = require('node-schedule')
 const { exec } = require('child_process')
@@ -66,6 +68,22 @@ if (process.env.hbwg_config) {
 }
 
 const api = global.api
+
+logback(`heStudio BingWallpaper Get version: ${VERSION}`)
+const requestOptions = {
+  method: 'GET', 
+  redirect: 'follow'
+}
+const packageurl = 'https://raw.githubusercontent.com/hestudio-community/bing-wallpaper-get/main/package.json'
+function AfterGetVersion(src) {
+  const version = src.version
+  if (version !== VERSION) {
+    logback(`New Version! ${version} is ready.`)
+  }
+}
+fetch(packageurl, requestOptions) 
+.then((response) => response.json()) 
+.then((result) => AfterGetVersion(result))
 
 function cacheimg () {
   const xhr = new XMLHttpRequest()
