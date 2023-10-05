@@ -22,19 +22,19 @@ if (process.env.hbwg_port) {
 const port = global.port
 
 const getback = (ip, path) => {
-  console.log('[' + dayjs().format('YYYY-MM-DD HH:mm:ss') + '] ' + ip + ' GET ' + path)
+  console.log(`[${dayjs().format('YYYY-MM-DD HH:mm:ss')}] ${ip} GET ${path}`)
 }
 
 const postback = (ip, path) => {
-  console.log('[' + dayjs().format('YYYY-MM-DD HH:mm:ss') + '] ' + ip + ' POST ' + path)
+  console.log(`[${dayjs().format('YYYY-MM-DD HH:mm:ss')}] ${ip} POST ${path}`)
 }
 
 const logback = (log) => {
-  console.log('[' + dayjs().format('YYYY-MM-DD HH:mm:ss') + '] ' + log)
+  console.log(`[${dayjs().format('YYYY-MM-DD HH:mm:ss')}] ${log}`)
 }
 
 const logerr = (err) => {
-  console.error('[' + dayjs().format('YYYY-MM-DD HH:mm:ss') + '] ERROR: ' + err)
+  console.error(`[${dayjs().format('YYYY-MM-DD HH:mm:ss')}] ERROR: ${err}`)
 }
 
 if (process.env.hbwg_external) {
@@ -71,12 +71,19 @@ const api = global.api
 
 // 1.3.0 Version update prompt
 logback(`heStudio BingWallpaper Get version: ${VERSION}`)
+if (process.env.hbwg_packageurl) {
+  const packageurl = process.env.hbwg_packageurl
+  global.packageurl = packageurl
+} else {
+  const packageurl = 'https://raw.githubusercontent.com/hestudio-community/bing-wallpaper-get/main/package.json'
+  global.packageurl = packageurl
+}
+const packageurl = global.packageurl
 if (process.env.hbwg_getupdate !== 'false') {
   const requestOptions = {
     method: 'GET', 
     redirect: 'follow'
   }
-  const packageurl = 'https://raw.githubusercontent.com/hestudio-community/bing-wallpaper-get/main/package.json'
   function AfterGetVersion(src) {
     const version = src.version
     if (version !== VERSION) {
@@ -132,7 +139,6 @@ const job = schedule.scheduleJob(rule, function () {
       method: 'GET', 
       redirect: 'follow'
     }
-    const packageurl = 'https://raw.githubusercontent.com/hestudio-community/bing-wallpaper-get/main/package.json'
     function AfterGetVersion(src) {
       const version = src.version
       if (version !== VERSION) {
