@@ -69,21 +69,24 @@ if (process.env.hbwg_config) {
 
 const api = global.api
 
+// 1.3.0 Version update prompt
 logback(`heStudio BingWallpaper Get version: ${VERSION}`)
-const requestOptions = {
-  method: 'GET', 
-  redirect: 'follow'
-}
-const packageurl = 'https://raw.githubusercontent.com/hestudio-community/bing-wallpaper-get/main/package.json'
-function AfterGetVersion(src) {
-  const version = src.version
-  if (version !== VERSION) {
-    logback(`New Version! ${version} is ready.`)
+if (process.env.hbwg_getupdate !== 'false') {
+  const requestOptions = {
+    method: 'GET', 
+    redirect: 'follow'
   }
+  const packageurl = 'https://raw.githubusercontent.com/hestudio-community/bing-wallpaper-get/main/package.json'
+  function AfterGetVersion(src) {
+    const version = src.version
+    if (version !== VERSION) {
+      logback(`New Version! ${version} is ready.`)
+    }
+  }
+  fetch(packageurl, requestOptions) 
+  .then((response) => response.json()) 
+  .then((result) => AfterGetVersion(result))
 }
-fetch(packageurl, requestOptions) 
-.then((response) => response.json()) 
-.then((result) => AfterGetVersion(result))
 
 function cacheimg () {
   const xhr = new XMLHttpRequest()
@@ -124,6 +127,23 @@ if (typeof external !== 'undefined') {
 
 // eslint-disable-next-line no-unused-vars
 const job = schedule.scheduleJob(rule, function () {
+  if (process.env.hbwg_getupdate !== 'false') {
+    const requestOptions = {
+      method: 'GET', 
+      redirect: 'follow'
+    }
+    const packageurl = 'https://raw.githubusercontent.com/hestudio-community/bing-wallpaper-get/main/package.json'
+    function AfterGetVersion(src) {
+      const version = src.version
+      if (version !== VERSION) {
+        logback(`New Version! ${version} is ready.`)
+      }
+    }
+    fetch(packageurl, requestOptions) 
+    .then((response) => response.json()) 
+    .then((result) => AfterGetVersion(result))
+  }
+
   const xhr = new XMLHttpRequest()
   xhr.open('GET', api)
   xhr.send()
