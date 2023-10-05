@@ -45,7 +45,7 @@ For details, see https://www.hestudio.net/docs/hestudio_bing_wallpaper_get.html
  git clone https://github.com/hestudio-community/bing-wallpaper-get.git
  cd bing-wallpaper-get
  yarn install --production
- yarn run server
+ yarn server
  ```
 
  > We will use yarn as the package manager after version 1.3.0. If you deploy in this way, please switch in time to avoid any impact.
