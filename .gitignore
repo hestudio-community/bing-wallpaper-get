@@ -3,3 +3,6 @@ package-lock.json
 image.jpg
 .env
 external.js
+
+.yarn
+.pnp*
