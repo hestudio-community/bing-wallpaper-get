@@ -16,8 +16,6 @@ jobs:
           node-version: '18.x'
       - name: Install dependencies
         run: yarn install
-      - name: Build package
-        run: yarn build
       - name: Publish package
         run: npm publish
         env: 
