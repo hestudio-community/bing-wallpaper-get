@@ -15,12 +15,13 @@ jobs:
         with:
           node-version: '18.x'
       - name: Install dependencies
-        run: npm install
-      - run: npm ci
+        run: yarn install
       - name: Publish package
-        run: npm publish
+        run: |
+          npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+          npm publish
         env: 
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   build:
 
