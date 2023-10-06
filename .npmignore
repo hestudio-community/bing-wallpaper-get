@@ -5,4 +5,5 @@ Dockerfile
 external.js
 image.jpg
 .env
-releaseis
+releaseit
+.pnp*
