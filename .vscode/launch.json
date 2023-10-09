@@ -5,7 +5,7 @@
             "type": "node-terminal",
             "name": "Run API",
             "request": "launch",
-            "command": "npm run server",
+            "command": "yarn server",
             "cwd": "${workspaceFolder}"
         }
     ]

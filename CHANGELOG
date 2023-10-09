@@ -1,3 +1,10 @@
+### 1.3.1
+1. Move the automatic update detection switch to the external.js file.
+2. (Major update) Optimize the code architecture. Directly export the built-in function, and when using it, you need to migrate the code of external.js to the new scheme.We will remove the support of the original code in v1.4.0 version.
+3. Dependency library upgrade.
+4. The resource acquisition mode is changed to fetch api.
+5. Export some configuration information and can be used for development and debugging.
+
 ### 1.3.0
 1. Version verification before starting the new program.
 2. Optimize the code.
