@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:lts
 ENV APP_HOME /app
 WORKDIR $APP_HOME
 RUN npm install hestudio-bingwallpaper-get

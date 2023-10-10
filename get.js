@@ -1,6 +1,6 @@
 require('dotenv').config()
 
-const VERSION = '1.3.0'
+const VERSION = '1.3.1'
 
 const express = require('express')
 const schedule = require('node-schedule')
@@ -8,7 +8,6 @@ const { exec } = require('child_process')
 const path = require('path')
 const fs = require('fs')
 const app = express()
-const XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest
 const dayjs = require('dayjs')
 
 if (process.env.hbwg_port) {
@@ -21,18 +20,36 @@ if (process.env.hbwg_port) {
 
 const port = global.port
 
+/**
+ * Record GET request log
+ * @param {string} ip ip address
+ * @param {string} path URL path visited.
+ */
 const getback = (ip, path) => {
   console.log(`[${dayjs().format('YYYY-MM-DD HH:mm:ss')}] ${ip} GET ${path}`)
 }
 
+/**
+ * Record POST request log
+ * @param {string} ip ip address
+ * @param {string} path URL path visited.
+ */
 const postback = (ip, path) => {
   console.log(`[${dayjs().format('YYYY-MM-DD HH:mm:ss')}] ${ip} POST ${path}`)
 }
 
+/**
+ * Record a regular log
+ * @param {string} log 
+ */
 const logback = (log) => {
   console.log(`[${dayjs().format('YYYY-MM-DD HH:mm:ss')}] ${log}`)
 }
 
+/**
+ * Record error log
+ * @param {string} err 
+ */
 const logerr = (err) => {
   console.error(`[${dayjs().format('YYYY-MM-DD HH:mm:ss')}] ERROR: ${err}`)
 }
@@ -71,6 +88,33 @@ const api = global.api
 
 // 1.3.0 Version update prompt
 logback(`heStudio BingWallpaper Get version: ${VERSION}`)
+if (typeof external !== 'undefined') {
+  if (external.getupdate !== undefined) {
+    logback('Getting updated components has been disabled.')
+    if (external.getupdate === false) {
+      global.getupdate = false
+    } else if (external.getupdate === true) {
+      global.getupdate = true
+    } else {
+      logerr('getupdate option should be boolean.')
+      process.exit(1)
+    }
+  }
+}
+
+/**
+ * @deprecated This environment variable will be deprecated in v1.4.0
+ * In version v1.3.1, we made a compatibility optimization for the original environment variable switch.
+ */
+if (process.env.hbwg_getupdate === 'false') {
+  global.getupdate = false
+  logback('This environment variable will be deprecated in v1.4.0')
+} else if (global.getupdate === undefined) {
+  global.getupdate = true
+}
+
+const getupdate = global.getupdate
+
 if (process.env.hbwg_packageurl) {
   const packageurl = process.env.hbwg_packageurl
   global.packageurl = packageurl
@@ -79,7 +123,7 @@ if (process.env.hbwg_packageurl) {
   global.packageurl = packageurl
 }
 const packageurl = global.packageurl
-if (process.env.hbwg_getupdate !== 'false') {
+if (getupdate !== false) {
   const requestOptions = {
     method: 'GET', 
     redirect: 'follow'
@@ -95,21 +139,23 @@ if (process.env.hbwg_getupdate !== 'false') {
   .then((result) => AfterGetVersion(result))
 }
 
+function download(bingsrc) {
+  const url = host + bingsrc.images[0].url
+  exec(String('wget -O image.jpg ' + url))
+  global.copyright = bingsrc.images[0].copyright
+  global.copyrightlink = bingsrc.images[0].copyrightlink
+  global.title = bingsrc.images[0].title
+  logback('Refresh Successfully!')
+}
+
 function cacheimg () {
-  const xhr = new XMLHttpRequest()
-  xhr.open('GET', api)
-  xhr.send()
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === 4 && xhr.status === 200) {
-      const r = xhr.responseText
-      const bingsrc = JSON.parse(r)
-      const url = host + bingsrc.images[0].url
-      exec(String('wget -O image.jpg ' + url))
-      global.copyright = bingsrc.images[0].copyright
-      global.copyrightlink = bingsrc.images[0].copyrightlink
-      global.title = bingsrc.images[0].title
-    }
+  const requestOptions = {
+    method: 'GET', 
+    redirect: 'follow'
   }
+  fetch(api, requestOptions) 
+    .then((response) => response.json()) 
+    .then((result) => download(result))
 }
 
 // 定时
@@ -117,7 +163,7 @@ const rule = new schedule.RecurrenceRule()
 
 if (typeof external !== 'undefined') {
   if (external.refreshtime) {
-    logback('An external file is being used.')
+    logback('Timer configuration imported.')
     external.refreshtime(rule)
   } else {
     rule.hour = 0
@@ -134,7 +180,7 @@ if (typeof external !== 'undefined') {
 
 // eslint-disable-next-line no-unused-vars
 const job = schedule.scheduleJob(rule, function () {
-  if (process.env.hbwg_getupdate !== 'false') {
+  if (getupdate !== false) {
     const requestOptions = {
       method: 'GET', 
       redirect: 'follow'
@@ -149,22 +195,13 @@ const job = schedule.scheduleJob(rule, function () {
     .then((response) => response.json()) 
     .then((result) => AfterGetVersion(result))
   }
-
-  const xhr = new XMLHttpRequest()
-  xhr.open('GET', api)
-  xhr.send()
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === 4 && xhr.status === 200) {
-      const r = xhr.responseText
-      const bingsrc = JSON.parse(r)
-      const url = host + bingsrc.images[0].url
-      exec(String('wget -O image.jpg ' + url))
-      global.copyright = bingsrc.images[0].copyright
-      global.copyrightlink = bingsrc.images[0].copyrightlink
-      global.title = bingsrc.images[0].title
-      logback('Refresh Successfully!')
-    }
+  const requestOptions = {
+    method: 'GET', 
+    redirect: 'follow'
   }
+  fetch(api, requestOptions) 
+    .then((response) => response.json()) 
+    .then((result) => download(result))
 })
 
 cacheimg()
@@ -180,6 +217,26 @@ app.all('*', function (req,
   else next()
 })
 
+// Derived function
+module.exports = {
+  getback,
+  postback,
+  logback,
+  logerr,
+  port,
+  api,
+  getupdate,
+  packageurl,
+}
+
+// Load configuration file
+if (typeof external !== 'undefined') {
+  if (external.beforestart) {
+    logback('Initialization configuration has been imported.')
+    external.beforestart(app, getback, postback, logback, logerr)
+  }
+}
+
 // 主程序
 app.get('/', (req, res) => {
   const headip = req.headers['x-real-ip']
@@ -193,7 +250,7 @@ app.get('/', (req, res) => {
   const ip = global.ip
   if (typeof external !== 'undefined') {
     if (external.rootprogram) {
-      logback('An external file is being used.')
+      logback('Root directory component imported successfully.')
       external.rootprogram(req, res, getback, logback, logerr)
     } else {
       res.redirect('https://www.hestudio.net/docs/hestudio_bing_wallpaper_get.html')
@@ -251,12 +308,6 @@ app.get('/getcopyright', (req, res) => {
   getback(ip, '/getcopyright')
 })
 
-if (typeof external !== 'undefined') {
-  if (external.beforestart) {
-    logback('An external file is being used.')
-    external.beforestart(app, getback, postback, logback, logerr)
-  }
-}
 
 app.listen(port, () => {
   logback(`heStudio BingWallpaper Get is running on localhost:${port}`)
