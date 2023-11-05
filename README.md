@@ -1,58 +1,69 @@
 # heStudio BingWallpaper Get
 
 ### Demo and detailed documentation
-For details, see https://www.hestudio.net/docs/hestudio_bing_wallpaper_get.html
 
- ### Call method
- > Run port at `3000`
- #### Get pictures
- ```
- GET /getimage
- ```
+For details, see <https://www.hestudio.net/docs/hestudio_bing_wallpaper_get.html>
 
- #### Get image title
- ```
- GET /gettitle
- ```
+### Call method
+>
+> Run port at `3000`
+>
+#### Get pictures
 
- Return parameters:
+```text
+GET /getimage
+```
 
- | Parameters | Description |
- |---|---|
- | `title` | title |
+#### Get image title
 
- #### Get image copyright information
- ```
- GET /getcopyright
- ```
+```text
+GET /gettitle
+```
 
- Return parameters:
+Return parameters:
 
- | Parameters | Description |
- |---|---|
- | `copyright` | Copyright information |
- | `copyrightlink` | The link corresponding to the copyright information |
+| Parameters | Description |
+|---|---|
+| `title` | title |
 
- ### installation method
- #### Docker deployment (recommended)
- ```sh
- docker pull hestudio/bingwallpaper_get
- docker run -d -p 3000:3000 hestudio/bingwallpaper_get
- ```
+#### Get image copyright information
 
- #### Manual installation
- ```sh
- git clone https://github.com/hestudio-community/bing-wallpaper-get.git
- cd bing-wallpaper-get
- yarn install --production
- yarn server
- ```
+```text
+GET /getcopyright
+```
 
- > We will use yarn as the package manager after version 1.3.0. If you deploy in this way, please switch in time to avoid any impact.
+Return parameters:
 
- #### Install and run via NPM
- ```sh
- npm install hestudio-bingwallpaper-get
- echo "require('hestudio-bingwallpaper-get')" >> server.js
- node server.js
- ```
+| Parameters | Description |
+|---|---|
+| `copyright` | Copyright information |
+| `copyrightlink` | The link corresponding to the copyright information |
+
+### installation method
+
+#### Docker deployment (recommended)
+
+```sh
+docker pull hestudio/bingwallpaper_get
+docker run -d -p 3000:3000 hestudio/bingwallpaper_get
+```
+
+#### Manual installation
+
+```sh
+git clone https://github.com/hestudio-community/bing-wallpaper-get.git
+cd bing-wallpaper-get
+npm install --global pnpm
+pnpm install --production
+pnpm server
+```
+
+> We will use `pnpm` as the package manager after version 1.3.2. If you deploy in this way, please switch in time to avoid any impact.
+
+#### Install and run via NPM
+
+```sh
+npm install hestudio-bingwallpaper-get
+echo "require('hestudio-bingwallpaper-get')" >> server.js
+node server.js
+```
