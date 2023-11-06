@@ -1,6 +1,6 @@
 require('dotenv').config()
 
-const VERSION = '1.3.1'
+const VERSION = '1.3.2'
 
 const express = require('express')
 const schedule = require('node-schedule')
@@ -10,15 +10,13 @@ const fs = require('fs')
 const app = express()
 const dayjs = require('dayjs')
 
-if (process.env.hbwg_port) {
-  const port = process.env.hbwg_port
-  global.port = port
-} else {
-  const port = 3000
-  global.port = port
-}
+const hbwgConfig = {}
 
-const port = global.port
+if (process.env.hbwg_port) {
+  hbwgConfig.port = Number(process.env.hbwg_port)
+} else {
+  hbwgConfig.port = 3000
+}
 
 /**
  * Record GET request log
@@ -40,7 +38,7 @@ const postback = (ip, path) => {
 
 /**
  * Record a regular log
- * @param {string} log 
+ * @param {string} log
  */
 const logback = (log) => {
   console.log(`[${dayjs().format('YYYY-MM-DD HH:mm:ss')}] ${log}`)
@@ -48,123 +46,115 @@ const logback = (log) => {
 
 /**
  * Record error log
- * @param {string} err 
+ * @param {string} err
  */
 const logerr = (err) => {
   console.error(`[${dayjs().format('YYYY-MM-DD HH:mm:ss')}] ERROR: ${err}`)
 }
 
-if (process.env.hbwg_external) {
-  const external = require(process.env.hbwg_external)
-  global.external = external
-  logback('An external file has been imported.')
-} else if (fs.existsSync('./external.js')) {
-  const external = require(String(process.cwd() + '/external.js'))
-  global.external = external
-  logback('An external file has been imported.')
+/**
+ * Record warning log
+ * @param {string} warn
+ */
+const logwarn = (warn) => {
+  console.warn(`[${dayjs().format('YYYY-MM-DD HH:mm:ss')}] WARN: ${warn}`)
 }
-
-const external = global.external
 
 if (process.env.hbwg_host) {
-  const host = process.env.hbwg_host
-  global.host = host
+  hbwgConfig.host = process.env.hbwg_host
 } else {
-  const host = 'https://cn.bing.com'
-  global.host = host
+  hbwgConfig.host = 'https://cn.bing.com'
 }
-
-const host = global.host
 
 if (process.env.hbwg_config) {
-  const api = host + '/HPImageArchive.aspx?' + process.env.hbwg_config
-  global.api = api
+  hbwgConfig.api = hbwgConfig.host + '/HPImageArchive.aspx?' + process.env.hbwg_config
 } else {
-  const api = host + '/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN'
-  global.api = api
+  hbwgConfig.api = hbwgConfig.host + '/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN'
 }
 
-const api = global.api
+if (process.env.hbwg_header) {
+  hbwgConfig.header = process.env.hbwg_header
+} else {
+  hbwgConfig.header = 'x-real-ip'
+}
 
 // 1.3.0 Version update prompt
 logback(`heStudio BingWallpaper Get version: ${VERSION}`)
-if (typeof external !== 'undefined') {
-  if (external.getupdate !== undefined) {
+if (typeof hbwgConfig.external !== 'undefined') {
+  if (hbwgConfig.external.getupdate !== undefined) {
     logback('Getting updated components has been disabled.')
-    if (external.getupdate === false) {
-      global.getupdate = false
-    } else if (external.getupdate === true) {
-      global.getupdate = true
+    if (hbwgConfig.external.getupdate === false) {
+      hbwgConfig.getupdate = false
+    } else if (hbwgConfig.external.getupdate === true) {
+      hbwgConfig.getupdate = true
     } else {
       logerr('getupdate option should be boolean.')
       process.exit(1)
     }
   }
 }
-
 /**
  * @deprecated This environment variable will be deprecated in v1.4.0
  * In version v1.3.1, we made a compatibility optimization for the original environment variable switch.
  */
 if (process.env.hbwg_getupdate === 'false') {
-  global.getupdate = false
-  logback('This environment variable will be deprecated in v1.4.0')
-} else if (global.getupdate === undefined) {
-  global.getupdate = true
+  hbwgConfig.getupdate = false
+  logwarn('This environment variable will be deprecated in v1.4.0')
+} else if (hbwgConfig.getupdate === undefined) {
+  hbwgConfig.getupdate = true
 }
-
-const getupdate = global.getupdate
 
 if (process.env.hbwg_packageurl) {
-  const packageurl = process.env.hbwg_packageurl
-  global.packageurl = packageurl
+  hbwgConfig.packageurl = process.env.hbwg_packageurl
 } else {
-  const packageurl = 'https://raw.githubusercontent.com/hestudio-community/bing-wallpaper-get/main/package.json'
-  global.packageurl = packageurl
+  hbwgConfig.packageurl = 'https://raw.githubusercontent.com/hestudio-community/bing-wallpaper-get/main/package.json'
 }
-const packageurl = global.packageurl
-if (getupdate !== false) {
+if (hbwgConfig.getupdate !== false) {
   const requestOptions = {
-    method: 'GET', 
+    method: 'GET',
     redirect: 'follow'
   }
-  function AfterGetVersion(src) {
+  function AfterGetVersion (src) {
     const version = src.version
     if (version !== VERSION) {
       logback(`New Version! ${version} is ready.`)
     }
   }
-  fetch(packageurl, requestOptions) 
-  .then((response) => response.json()) 
-  .then((result) => AfterGetVersion(result))
+  fetch(hbwgConfig.packageurl, requestOptions)
+    .then((response) => response.json())
+    .then((result) => AfterGetVersion(result))
 }
 
-function download(bingsrc) {
-  const url = host + bingsrc.images[0].url
+/**
+ *
+ * @param {object} bingsrc
+ */
+const download = (bingsrc) => {
+  const url = hbwgConfig.host + bingsrc.images[0].url
   exec(String('wget -O image.jpg ' + url))
-  global.copyright = bingsrc.images[0].copyright
-  global.copyrightlink = bingsrc.images[0].copyrightlink
-  global.title = bingsrc.images[0].title
+  hbwgConfig.copyright = String(bingsrc.images[0].copyright)
+  hbwgConfig.copyrightlink = String(bingsrc.images[0].copyrightlink)
+  hbwgConfig.title = String(bingsrc.images[0].title)
   logback('Refresh Successfully!')
 }
 
-function cacheimg () {
+const cacheimg = () => {
   const requestOptions = {
-    method: 'GET', 
+    method: 'GET',
     redirect: 'follow'
   }
-  fetch(api, requestOptions) 
-    .then((response) => response.json()) 
+  fetch(hbwgConfig.api, requestOptions)
+    .then((response) => response.json())
     .then((result) => download(result))
 }
 
 // 定时
 const rule = new schedule.RecurrenceRule()
 
-if (typeof external !== 'undefined') {
-  if (external.refreshtime) {
+if (typeof hbwgConfig.external !== 'undefined') {
+  if (hbwgConfig.external.refreshtime) {
     logback('Timer configuration imported.')
-    external.refreshtime(rule)
+    hbwgConfig.external.refreshtime(rule)
   } else {
     rule.hour = 0
     rule.minute = 0
@@ -180,27 +170,27 @@ if (typeof external !== 'undefined') {
 
 // eslint-disable-next-line no-unused-vars
 const job = schedule.scheduleJob(rule, function () {
-  if (getupdate !== false) {
+  if (hbwgConfig.getupdate !== false) {
     const requestOptions = {
-      method: 'GET', 
+      method: 'GET',
       redirect: 'follow'
     }
-    function AfterGetVersion(src) {
+    function AfterGetVersion (src) {
       const version = src.version
       if (version !== VERSION) {
         logback(`New Version! ${version} is ready.`)
       }
     }
-    fetch(packageurl, requestOptions) 
-    .then((response) => response.json()) 
-    .then((result) => AfterGetVersion(result))
+    fetch(hbwgConfig.packageurl, requestOptions)
+      .then((response) => response.json())
+      .then((result) => AfterGetVersion(result))
   }
   const requestOptions = {
-    method: 'GET', 
+    method: 'GET',
     redirect: 'follow'
   }
-  fetch(api, requestOptions) 
-    .then((response) => response.json()) 
+  fetch(hbwgConfig.api, requestOptions)
+    .then((response) => response.json())
     .then((result) => download(result))
 })
 
@@ -223,23 +213,29 @@ module.exports = {
   postback,
   logback,
   logerr,
-  port,
-  api,
-  getupdate,
-  packageurl,
+  logwarn,
+  hbwgConfig
+}
+
+if (process.env.hbwg_external) {
+  hbwgConfig.external = require(process.env.hbwg_external)
+  logback('An external file has been imported.')
+} else if (fs.existsSync('./external.js')) {
+  hbwgConfig.external = require(String(process.cwd() + '/external.js'))
+  logback('An external file has been imported.')
 }
 
 // Load configuration file
-if (typeof external !== 'undefined') {
-  if (external.beforestart) {
+if (typeof hbwgConfig.external !== 'undefined') {
+  if (hbwgConfig.external.beforestart) {
     logback('Initialization configuration has been imported.')
-    external.beforestart(app, getback, postback, logback, logerr)
+    hbwgConfig.external.beforestart(app, getback, postback, logback, logerr)
   }
 }
 
 // 主程序
 app.get('/', (req, res) => {
-  const headip = req.headers['x-real-ip']
+  const headip = req.headers[hbwgConfig.header]
   if (headip === undefined) {
     const ip = req.ip
     global.ip = ip
@@ -248,10 +244,10 @@ app.get('/', (req, res) => {
     global.ip = ip
   }
   const ip = global.ip
-  if (typeof external !== 'undefined') {
-    if (external.rootprogram) {
+  if (typeof hbwgConfig.external !== 'undefined') {
+    if (hbwgConfig.external.rootprogram) {
       logback('Root directory component imported successfully.')
-      external.rootprogram(req, res, getback, logback, logerr)
+      hbwgConfig.external.rootprogram(req, res, getback, logback, logerr)
     } else {
       res.redirect('https://www.hestudio.net/docs/hestudio_bing_wallpaper_get.html')
     }
@@ -262,7 +258,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/getimage', (req, res) => {
-  const headip = req.headers['x-real-ip']
+  const headip = req.headers[hbwgConfig.header]
   if (headip === undefined) {
     const ip = req.ip
     global.ip = ip
@@ -276,7 +272,7 @@ app.get('/getimage', (req, res) => {
 })
 
 app.get('/gettitle', (req, res) => {
-  const headip = req.headers['x-real-ip']
+  const headip = req.headers[hbwgConfig.header]
   if (headip === undefined) {
     const ip = req.ip
     global.ip = ip
@@ -286,13 +282,13 @@ app.get('/gettitle', (req, res) => {
   }
   const ip = global.ip
   res.send({
-    title: global.title
+    title: hbwgConfig.title
   })
   getback(ip, '/gettitle')
 })
 
 app.get('/getcopyright', (req, res) => {
-  const headip = req.headers['x-real-ip']
+  const headip = req.headers[hbwgConfig.header]
   if (headip === undefined) {
     const ip = req.ip
     global.ip = ip
@@ -302,13 +298,12 @@ app.get('/getcopyright', (req, res) => {
   }
   const ip = global.ip
   res.send({
-    copyright: global.copyright,
-    copyrightlink: global.copyrightlink
+    copyright: hbwgConfig.copyright,
+    copyrightlink: hbwgConfig.copyrightlink
   })
   getback(ip, '/getcopyright')
 })
 
-
-app.listen(port, () => {
-  logback(`heStudio BingWallpaper Get is running on localhost:${port}`)
+app.listen(hbwgConfig.port, () => {
+  logback(`heStudio BingWallpaper Get is running on localhost:${hbwgConfig.port}`)
 })
