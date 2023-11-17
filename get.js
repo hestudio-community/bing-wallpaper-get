@@ -1,6 +1,6 @@
 require('dotenv').config()
 
-const VERSION = '1.3.2'
+const VERSION = '1.4.0-alpha.1'
 
 const express = require('express')
 const schedule = require('node-schedule')
@@ -93,16 +93,6 @@ if (typeof hbwgConfig.external !== 'undefined') {
     }
   }
 }
-/**
- * @deprecated This environment variable will be deprecated in v1.4.0
- * In version v1.3.1, we made a compatibility optimization for the original environment variable switch.
- */
-if (process.env.hbwg_getupdate === 'false') {
-  hbwgConfig.getupdate = false
-  logwarn('This environment variable will be deprecated in v1.4.0')
-} else if (hbwgConfig.getupdate === undefined) {
-  hbwgConfig.getupdate = true
-}
 
 if (process.env.hbwg_packageurl) {
   hbwgConfig.packageurl = process.env.hbwg_packageurl
@@ -117,7 +107,7 @@ if (hbwgConfig.getupdate !== false) {
   function AfterGetVersion (src) {
     const version = src.version
     if (version !== VERSION) {
-      logback(`New Version! ${version} is ready.`)
+      logwarn(`New Version! ${version} is ready.`)
     }
   }
   fetch(hbwgConfig.packageurl, requestOptions)
@@ -178,7 +168,7 @@ const job = schedule.scheduleJob(rule, function () {
     function AfterGetVersion (src) {
       const version = src.version
       if (version !== VERSION) {
-        logback(`New Version! ${version} is ready.`)
+        logwarn(`New Version! ${version} is ready.`)
       }
     }
     fetch(hbwgConfig.packageurl, requestOptions)
