@@ -1,6 +1,7 @@
+const loadsuccess = false
 require('dotenv').config()
 
-const VERSION = '1.4.0-alpha.2'
+const VERSION = '1.4.0-alpha.3'
 
 const express = require('express')
 const schedule = require('node-schedule')
@@ -82,6 +83,63 @@ if (process.env.hbwg_header) {
   hbwgConfig.header = 'x-real-ip'
 }
 
+/**
+ *
+ * @param {object} bingsrc
+ */
+const download = (bingsrc) => {
+  const url = hbwgConfig.host + bingsrc.images[0].url
+  exec(String('wget -O tmp/image.jpg ' + url))
+  hbwgConfig.copyright = String(bingsrc.images[0].copyright)
+  hbwgConfig.copyrightlink = String(bingsrc.images[0].copyrightlink)
+  hbwgConfig.title = String(bingsrc.images[0].title)
+  logback('Refresh Successfully!')
+}
+
+const cacheimg = () => {
+  const requestOptions = {
+    method: 'GET',
+    redirect: 'follow'
+  }
+  fetch(hbwgConfig.api, requestOptions)
+    .then((response) => response.json())
+    .then((result) => download(result))
+}
+
+// 定时
+const rule = new schedule.RecurrenceRule()
+
+// 允许跨域
+app.all('*', function (req,
+  res, next) {
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Content-Length, Authorization, Accept,X-Requested-With')
+  res.header('Access-Control-Allow-Methods', 'PUT,POST,GET,DELETE,OPTIONS')
+  res.header('Access-Control-Allow-Credentials', 'true')
+  if (req.method === 'OPTIONS') res.send(200)
+  else next()
+})
+
+// Derived function
+module.exports = {
+  getback,
+  postback,
+  logback,
+  logerr,
+  logwarn,
+  hbwgConfig
+}
+
+if (process.env.hbwg_external) {
+  exec(`uglifyjs ${process.env.hbwg_external} -m -o ${process.cwd()}/tmp/external.js`)
+  hbwgConfig.external = require(`${process.cwd()}/tmp/external.js`)
+  logback('An external file has been imported.')
+} else if (fs.existsSync('./external.js')) {
+  exec(`uglifyjs ${process.cwd()}/external.js -m -o ${process.cwd()}/tmp/external.js`)
+  hbwgConfig.external = require(`${process.cwd()}/tmp/external.js`)
+  logback('An external file has been imported.')
+}
+
 // 1.3.0 Version update prompt
 logback(`heStudio BingWallpaper Get version: ${VERSION}`)
 if (typeof hbwgConfig.external !== 'undefined') {
@@ -118,32 +176,6 @@ if (hbwgConfig.getupdate !== false) {
     .then((response) => response.json())
     .then((result) => AfterGetVersion(result))
 }
-
-/**
- *
- * @param {object} bingsrc
- */
-const download = (bingsrc) => {
-  const url = hbwgConfig.host + bingsrc.images[0].url
-  exec(String('wget -O tmp/image.jpg ' + url))
-  hbwgConfig.copyright = String(bingsrc.images[0].copyright)
-  hbwgConfig.copyrightlink = String(bingsrc.images[0].copyrightlink)
-  hbwgConfig.title = String(bingsrc.images[0].title)
-  logback('Refresh Successfully!')
-}
-
-const cacheimg = () => {
-  const requestOptions = {
-    method: 'GET',
-    redirect: 'follow'
-  }
-  fetch(hbwgConfig.api, requestOptions)
-    .then((response) => response.json())
-    .then((result) => download(result))
-}
-
-// 定时
-const rule = new schedule.RecurrenceRule()
 
 if (typeof hbwgConfig.external !== 'undefined') {
   if (hbwgConfig.external.refreshtime) {
@@ -190,40 +222,66 @@ const job = schedule.scheduleJob(rule, function () {
 
 cacheimg()
 
-// 允许跨域
-app.all('*', function (req,
-  res, next) {
-  res.header('Access-Control-Allow-Origin', '*')
-  res.header('Access-Control-Allow-Headers', 'Content-Type,Content-Length, Authorization, Accept,X-Requested-With')
-  res.header('Access-Control-Allow-Methods', 'PUT,POST,GET,DELETE,OPTIONS')
-  res.header('Access-Control-Allow-Credentials', 'true')
-  if (req.method === 'OPTIONS') res.send(200)
-  else next()
-})
-
-// Derived function
-module.exports = {
-  getback,
-  postback,
-  logback,
-  logerr,
-  logwarn,
-  hbwgConfig
-}
-
-if (process.env.hbwg_external) {
-  hbwgConfig.external = require(process.env.hbwg_external)
-  logback('An external file has been imported.')
-} else if (fs.existsSync('./external.js')) {
-  hbwgConfig.external = require(String(process.cwd() + '/external.js'))
-  logback('An external file has been imported.')
-}
-
 // Load configuration file
 if (typeof hbwgConfig.external !== 'undefined') {
   if (hbwgConfig.external.beforestart) {
     logback('Initialization configuration has been imported.')
     hbwgConfig.external.beforestart(app, getback, postback, logback, logerr)
+  }
+}
+
+// api default configuration
+hbwgConfig.apiconfig = {
+  getimage: '/getimage',
+  gettitle: '/gettitle',
+  getcopyright: '/getcopyright'
+}
+
+// api configuration
+if (typeof hbwgConfig.external !== 'undefined') {
+  if (hbwgConfig.external.api) {
+    logback('The api configuration has been loaded.')
+    if (hbwgConfig.external.api.rename) {
+      try {
+        hbwgConfig.apiconfig.getimage = String(hbwgConfig.external.api.rename.getimage)
+      } catch (e) {
+        logerr(e)
+        logerr('rename option should be string.')
+        process.exit(1)
+      }
+      try {
+        hbwgConfig.apiconfig.gettitle = String(hbwgConfig.external.api.rename.gettitle)
+      } catch (e) {
+        logerr(e)
+        logerr('rename option should be string.')
+        process.exit(1)
+      }
+      try {
+        hbwgConfig.apiconfig.getcopyright = String(hbwgConfig.external.api.rename.getcopyright)
+      } catch (e) {
+        logerr(e)
+        logerr('rename option should be string.')
+        process.exit(1)
+      }
+    }
+    if (hbwgConfig.external.api.ban) {
+      if (!hbwgConfig.external.api.ban.isArray()) {
+        logerr('ban option should be array.')
+        process.exit(1)
+      } else {
+        for (let i = 0; i < hbwgConfig.external.api.ban.length; i++) {
+          if (hbwgConfig.external.api.ban[i] === 'getimage') {
+            hbwgConfig.apiconfig.getimage = false
+          }
+          if (hbwgConfig.external.api.ban[i] === 'gettitle') {
+            hbwgConfig.apiconfig.gettitle = false
+          }
+          if (hbwgConfig.external.api.ban[i] === 'getcopyright') {
+            hbwgConfig.apiconfig.gettitle = false
+          }
+        }
+      }
+    }
   }
 }
 
@@ -251,52 +309,60 @@ app.get('/', (req, res) => {
   getback(ip, '/')
 })
 
-app.get('/getimage', (req, res) => {
-  const headip = req.headers[hbwgConfig.header]
-  if (headip === undefined) {
-    const ip = req.ip
-    global.ip = ip
-  } else {
-    const ip = headip
-    global.ip = ip
-  }
-  const ip = global.ip
-  res.sendFile(path.join(process.cwd(), 'tmp/image.jpg'))
-  getback(ip, '/getimage')
-})
-
-app.get('/gettitle', (req, res) => {
-  const headip = req.headers[hbwgConfig.header]
-  if (headip === undefined) {
-    const ip = req.ip
-    global.ip = ip
-  } else {
-    const ip = headip
-    global.ip = ip
-  }
-  const ip = global.ip
-  res.send({
-    title: hbwgConfig.title
+if (!hbwgConfig.apiconfig.getimage) {
+  app.get(hbwgConfig.apiconfig.getimage, (req, res) => {
+    const headip = req.headers[hbwgConfig.header]
+    if (headip === undefined) {
+      const ip = req.ip
+      global.ip = ip
+    } else {
+      const ip = headip
+      global.ip = ip
+    }
+    const ip = global.ip
+    res.sendFile(path.join(process.cwd(), 'tmp/image.jpg'))
+    getback(ip, hbwgConfig.apiconfig.getimage)
   })
-  getback(ip, '/gettitle')
-})
+}
 
-app.get('/getcopyright', (req, res) => {
-  const headip = req.headers[hbwgConfig.header]
-  if (headip === undefined) {
-    const ip = req.ip
-    global.ip = ip
-  } else {
-    const ip = headip
-    global.ip = ip
-  }
-  const ip = global.ip
-  res.send({
-    copyright: hbwgConfig.copyright,
-    copyrightlink: hbwgConfig.copyrightlink
+if (!hbwgConfig.apiconfig.gettitle) {
+  app.get(hbwgConfig.apiconfig.gettitle, (req, res) => {
+    const headip = req.headers[hbwgConfig.header]
+    if (headip === undefined) {
+      const ip = req.ip
+      global.ip = ip
+    } else {
+      const ip = headip
+      global.ip = ip
+    }
+    const ip = global.ip
+    res.send({
+      title: hbwgConfig.title
+    })
+    getback(ip, hbwgConfig.apiconfig.gettitle)
   })
-  getback(ip, '/getcopyright')
-})
+}
+
+if (!hbwgConfig.apiconfig.getcopyright) {
+  app.get(hbwgConfig.apiconfig.getcopyright, (req, res) => {
+    const headip = req.headers[hbwgConfig.header]
+    if (headip === undefined) {
+      const ip = req.ip
+      global.ip = ip
+    } else {
+      const ip = headip
+      global.ip = ip
+    }
+    const ip = global.ip
+    res.send({
+      copyright: hbwgConfig.copyright,
+      copyrightlink: hbwgConfig.copyrightlink
+    })
+    getback(ip, hbwgConfig.apiconfig.getcopyright)
+  })
+}
+
+loadsuccess = true
 
 app.listen(hbwgConfig.port, () => {
   logback(`heStudio BingWallpaper Get is running on localhost:${hbwgConfig.port}`)
