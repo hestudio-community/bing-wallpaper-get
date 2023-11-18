@@ -1,6 +1,6 @@
 require('dotenv').config()
 
-const VERSION = '1.4.0-alpha.1'
+const VERSION = '1.4.0-alpha.2'
 
 const express = require('express')
 const schedule = require('node-schedule')
@@ -11,6 +11,10 @@ const app = express()
 const dayjs = require('dayjs')
 
 const hbwgConfig = {}
+
+if (!fs.existsSync('./tmp/')) {
+  fs.mkdirSync('./tmp')
+}
 
 if (process.env.hbwg_port) {
   hbwgConfig.port = Number(process.env.hbwg_port)
@@ -121,7 +125,7 @@ if (hbwgConfig.getupdate !== false) {
  */
 const download = (bingsrc) => {
   const url = hbwgConfig.host + bingsrc.images[0].url
-  exec(String('wget -O image.jpg ' + url))
+  exec(String('wget -O tmp/image.jpg ' + url))
   hbwgConfig.copyright = String(bingsrc.images[0].copyright)
   hbwgConfig.copyrightlink = String(bingsrc.images[0].copyrightlink)
   hbwgConfig.title = String(bingsrc.images[0].title)
@@ -257,7 +261,7 @@ app.get('/getimage', (req, res) => {
     global.ip = ip
   }
   const ip = global.ip
-  res.sendFile(path.join(process.cwd(), 'image.jpg'))
+  res.sendFile(path.join(process.cwd(), 'tmp/image.jpg'))
   getback(ip, '/getimage')
 })
 
