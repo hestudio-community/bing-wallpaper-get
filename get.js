@@ -1,4 +1,4 @@
-const loadsuccess = false
+let loadsuccess = false
 require('dotenv').config()
 
 const VERSION = '1.4.0-alpha.3'
@@ -236,6 +236,7 @@ hbwgConfig.apiconfig = {
   gettitle: '/gettitle',
   getcopyright: '/getcopyright'
 }
+logback('debug: api ok')
 
 // api configuration
 if (typeof hbwgConfig.external !== 'undefined') {
@@ -309,7 +310,7 @@ app.get('/', (req, res) => {
   getback(ip, '/')
 })
 
-if (!hbwgConfig.apiconfig.getimage) {
+if (hbwgConfig.apiconfig.getimage) {
   app.get(hbwgConfig.apiconfig.getimage, (req, res) => {
     const headip = req.headers[hbwgConfig.header]
     if (headip === undefined) {
@@ -325,7 +326,7 @@ if (!hbwgConfig.apiconfig.getimage) {
   })
 }
 
-if (!hbwgConfig.apiconfig.gettitle) {
+if (hbwgConfig.apiconfig.gettitle) {
   app.get(hbwgConfig.apiconfig.gettitle, (req, res) => {
     const headip = req.headers[hbwgConfig.header]
     if (headip === undefined) {
@@ -343,7 +344,7 @@ if (!hbwgConfig.apiconfig.gettitle) {
   })
 }
 
-if (!hbwgConfig.apiconfig.getcopyright) {
+if (hbwgConfig.apiconfig.getcopyright) {
   app.get(hbwgConfig.apiconfig.getcopyright, (req, res) => {
     const headip = req.headers[hbwgConfig.header]
     if (headip === undefined) {
@@ -363,7 +364,19 @@ if (!hbwgConfig.apiconfig.getcopyright) {
 }
 
 loadsuccess = true
+logback('debug: all ok')
 
-app.listen(hbwgConfig.port, () => {
-  logback(`heStudio BingWallpaper Get is running on localhost:${hbwgConfig.port}`)
-})
+const loadmonitor = () => {
+  // eslint-disable-next-line no-unmodified-loop-condition
+  while (!loadsuccess) {
+    continue
+  }
+  return 0
+}
+
+(async function () {
+  await loadmonitor
+  app.listen(hbwgConfig.port, () => {
+    logback(`heStudio BingWallpaper Get is running on localhost:${hbwgConfig.port}`)
+  })
+})()
