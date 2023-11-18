@@ -5,7 +5,7 @@ const VERSION = '1.4.0-alpha.3'
 
 const express = require('express')
 const schedule = require('node-schedule')
-const { exec } = require('child_process')
+const ChildProcess = require('child_process')
 const path = require('path')
 const fs = require('fs')
 const app = express()
@@ -89,7 +89,7 @@ if (process.env.hbwg_header) {
  */
 const download = (bingsrc) => {
   const url = hbwgConfig.host + bingsrc.images[0].url
-  exec(String('wget -O tmp/image.jpg ' + url))
+  ChildProcess.exec(String('wget -O tmp/image.jpg ' + url))
   hbwgConfig.copyright = String(bingsrc.images[0].copyright)
   hbwgConfig.copyrightlink = String(bingsrc.images[0].copyrightlink)
   hbwgConfig.title = String(bingsrc.images[0].title)
@@ -131,11 +131,11 @@ module.exports = {
 }
 
 if (process.env.hbwg_external) {
-  exec(`uglifyjs ${process.env.hbwg_external} -m -o ${process.cwd()}/tmp/external.js`)
+  ChildProcess.exec(`uglifyjs ${process.env.hbwg_external} -m -o ${process.cwd()}/tmp/external.js`)
   hbwgConfig.external = require(`${process.cwd()}/tmp/external.js`)
   logback('An external file has been imported.')
 } else if (fs.existsSync('./external.js')) {
-  exec(`uglifyjs ${process.cwd()}/external.js -m -o ${process.cwd()}/tmp/external.js`)
+  ChildProcess.execSync(`uglifyjs ${process.cwd()}/external.js -m -o ${process.cwd()}/tmp/external.js`)
   hbwgConfig.external = require(`${process.cwd()}/tmp/external.js`)
   logback('An external file has been imported.')
 }
@@ -236,7 +236,6 @@ hbwgConfig.apiconfig = {
   gettitle: '/gettitle',
   getcopyright: '/getcopyright'
 }
-logback('debug: api ok')
 
 // api configuration
 if (typeof hbwgConfig.external !== 'undefined') {
@@ -266,7 +265,7 @@ if (typeof hbwgConfig.external !== 'undefined') {
       }
     }
     if (hbwgConfig.external.api.ban) {
-      if (!hbwgConfig.external.api.ban.isArray()) {
+      if (!Array.isArray(hbwgConfig.external.api.ban)) {
         logerr('ban option should be array.')
         process.exit(1)
       } else {
@@ -278,7 +277,7 @@ if (typeof hbwgConfig.external !== 'undefined') {
             hbwgConfig.apiconfig.gettitle = false
           }
           if (hbwgConfig.external.api.ban[i] === 'getcopyright') {
-            hbwgConfig.apiconfig.gettitle = false
+            hbwgConfig.apiconfig.getcopyright = false
           }
         }
       }
@@ -364,7 +363,6 @@ if (hbwgConfig.apiconfig.getcopyright) {
 }
 
 loadsuccess = true
-logback('debug: all ok')
 
 const loadmonitor = () => {
   // eslint-disable-next-line no-unmodified-loop-condition
