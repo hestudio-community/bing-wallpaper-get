@@ -4,7 +4,7 @@
 
 This is the Develop version to preview the `v1.4.0` version of the update. The update is detailed at https://disk.hestudio.net/#s/92fJgs8w
 
-You can listen for version updates on the Develop branch via `https://raw.githubusercontent.com/hestudio-community/bing-wallpaper-get/main/package.json`.
+You can listen for version updates on the Develop branch via `https://registry.npmjs.com/hestudio-bingwallpaper-get/alpha`.
 
 ### Demo and detailed documentation
 
