@@ -176,32 +176,6 @@ if (hbwgConfig.getupdate !== false) {
     .then((result) => AfterGetVersion(result))
 }
 
-/**
- *
- * @param {object} bingsrc
- */
-const download = (bingsrc) => {
-  const url = hbwgConfig.host + bingsrc.images[0].url
-  exec(String('wget -O tmp/image.jpg ' + url))
-  hbwgConfig.copyright = String(bingsrc.images[0].copyright)
-  hbwgConfig.copyrightlink = String(bingsrc.images[0].copyrightlink)
-  hbwgConfig.title = String(bingsrc.images[0].title)
-  logback('Refresh Successfully!')
-}
-
-const cacheimg = () => {
-  const requestOptions = {
-    method: 'GET',
-    redirect: 'follow'
-  }
-  fetch(hbwgConfig.api, requestOptions)
-    .then((response) => response.json())
-    .then((result) => download(result))
-}
-
-// 定时
-const rule = new schedule.RecurrenceRule()
-
 if (typeof hbwgConfig.external !== 'undefined') {
   if (hbwgConfig.external.refreshtime) {
     logback('Timer configuration imported.')
@@ -390,4 +364,3 @@ if (hbwgConfig.apiconfig.getcopyright) {
 app.listen(hbwgConfig.port, () => {
   logback(`heStudio BingWallpaper Get is running on localhost:${hbwgConfig.port}`)
 })
-
