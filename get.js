@@ -1,6 +1,6 @@
 require('dotenv').config()
 
-const VERSION = '1.4.0-alpha.3'
+const VERSION = '1.4.0-alpha.4'
 
 const express = require('express')
 const schedule = require('node-schedule')
@@ -129,6 +129,7 @@ module.exports = {
   hbwgConfig
 }
 
+logback(`heStudio BingWallpaper Get version: ${VERSION}`)
 if (process.env.hbwg_external) {
   ChildProcess.exec(`uglifyjs ${process.env.hbwg_external} -m -o ${process.cwd()}/tmp/external.js`)
   hbwgConfig.external = require(`${process.cwd()}/tmp/external.js`)
@@ -140,7 +141,6 @@ if (process.env.hbwg_external) {
 }
 
 // 1.3.0 Version update prompt
-logback(`heStudio BingWallpaper Get version: ${VERSION}`)
 if (typeof hbwgConfig.external !== 'undefined') {
   if (hbwgConfig.external.getupdate !== undefined) {
     logback('Getting updated components has been disabled.')
@@ -153,6 +153,8 @@ if (typeof hbwgConfig.external !== 'undefined') {
       process.exit(1)
     }
   }
+} else {
+  hbwgConfig.getupdate = true
 }
 
 if (process.env.hbwg_packageurl) {
@@ -233,7 +235,8 @@ if (typeof hbwgConfig.external !== 'undefined') {
 hbwgConfig.apiconfig = {
   getimage: '/getimage',
   gettitle: '/gettitle',
-  getcopyright: '/getcopyright'
+  getcopyright: '/getcopyright',
+  debug: false
 }
 
 // api configuration
@@ -244,21 +247,18 @@ if (typeof hbwgConfig.external !== 'undefined') {
       try {
         hbwgConfig.apiconfig.getimage = String(hbwgConfig.external.api.rename.getimage)
       } catch (e) {
-        logerr(e)
         logerr('rename option should be string.')
         process.exit(1)
       }
       try {
         hbwgConfig.apiconfig.gettitle = String(hbwgConfig.external.api.rename.gettitle)
       } catch (e) {
-        logerr(e)
         logerr('rename option should be string.')
         process.exit(1)
       }
       try {
         hbwgConfig.apiconfig.getcopyright = String(hbwgConfig.external.api.rename.getcopyright)
       } catch (e) {
-        logerr(e)
         logerr('rename option should be string.')
         process.exit(1)
       }
@@ -282,6 +282,123 @@ if (typeof hbwgConfig.external !== 'undefined') {
       }
     }
   }
+}
+
+// debug
+if (typeof hbwgConfig.external !== 'undefined') {
+  if (hbwgConfig.external.debug) {
+    if (!hbwgConfig.external.debug.url) {
+      hbwgConfig.apiconfig.debug = '/debug'
+    } else {
+      try {
+        hbwgConfig.apiconfig.debug = String(hbwgConfig.external.debug.url)
+      } catch (error) {
+        logerr('url option should be string.')
+        process.exit(1)
+      }
+    }
+    if (hbwgConfig.external.debug.passwd) {
+      hbwgConfig.DebugPasswd = hbwgConfig.external.debug.passwd
+    }
+  }
+}
+
+if (hbwgConfig.apiconfig.debug) {
+  app.get(hbwgConfig.apiconfig.debug, (req, res) => {
+    const ShowDebug = () => {
+      res.setHeader('Content-Type', 'text/html')
+      res.send(`
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Debug - heStudio BingWallpaper Get</title>
+</head>
+
+<body>
+  <h1>Configurations</h1>
+  <div>
+    <div>
+      <h3>API URL Configurations</h3>
+      <div>
+        <p>getimage: ${hbwgConfig.apiconfig.getimage}</p>
+        <p>gettitle: ${hbwgConfig.apiconfig.gettitle}</p>
+        <p>getcopyright: ${hbwgConfig.apiconfig.getcopyright}</p>
+      </div>
+    </div>
+    <div>
+      <h3>Source</h3>
+      <div>
+        <h4>Configurations</h4>
+        <div>
+          <p>Bing API: ${hbwgConfig.api}</p>
+        </div>
+        <h4>From Bing</h4>
+        <div>
+          <p>Title: ${hbwgConfig.title}</p>
+          <p>Copyright: ${hbwgConfig.copyright}</p>
+          <p>Copyright Link: ${hbwgConfig.copyrightlink}
+        </div>
+      </div>
+    </div>
+    <div>
+      <h3>Server Configurations</h3>
+      <div>
+        <p>Port: ${hbwgConfig.port}</p>
+        <p>isGetUpdate: ${hbwgConfig.getupdate}</p>
+        <p>Update PackageUrl: ${hbwgConfig.packageurl}</p>
+        <p>Request header for getting IP: ${hbwgConfig.header}
+        <p>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
+      `)
+    }
+    if (hbwgConfig.DebugPasswd) {
+      if (req.query.passwd === hbwgConfig.DebugPasswd) {
+        const headip = req.headers[hbwgConfig.header]
+        if (headip === undefined) {
+          const ip = req.ip
+          global.ip = ip
+        } else {
+          const ip = headip
+          global.ip = ip
+        }
+        const ip = global.ip
+        getback(ip, `${hbwgConfig.apiconfig.debug}?passwd=***`)
+        ShowDebug()
+      } else {
+        const headip = req.headers[hbwgConfig.header]
+        if (headip === undefined) {
+          const ip = req.ip
+          global.ip = ip
+        } else {
+          const ip = headip
+          global.ip = ip
+        }
+        const ip = global.ip
+        getback(ip, `${hbwgConfig.apiconfig.debug}?passwd=***`)
+        logwarn('Password is wrong!')
+        res.setHeader('Content-Type', 'text/html')
+        res.status(403).send('<script>alert("Password is wrong!")</script>')
+      }
+    } else {
+      const headip = req.headers[hbwgConfig.header]
+      if (headip === undefined) {
+        const ip = req.ip
+        global.ip = ip
+      } else {
+        const ip = headip
+        global.ip = ip
+      }
+      const ip = global.ip
+      getback(ip, `${hbwgConfig.apiconfig.debug}`)
+      ShowDebug()
+    }
+  })
 }
 
 // 主程序
