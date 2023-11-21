@@ -28,9 +28,6 @@
     "wallpaper",
     "api"
   ],
-  "contributors": [
-    "undefined"
-  ],
   "displayName": "heStudio BingWallpaper Get",
   "os": [
     "linux"
@@ -53,5 +50,8 @@
   },
   "exports": {
     ".": "./get.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
