@@ -2,7 +2,7 @@
 
 ### Develop Version
 
-This is the Develop version to preview the `v1.4.0` version of the update. The update is detailed at https://disk.hestudio.net/#s/92fJgs8w
+This is the Develop version to preview the `v1.4.0` version of the update. The update is detailed at https://storage.hestudio.net/s/LXiX
 
 You can listen for version updates on the Develop branch via `https://cdn.jsdelivr.net/npm/hestudio-bingwallpaper-get@alpha/package.json`.
 
@@ -11,9 +11,9 @@ You can listen for version updates on the Develop branch via `https://cdn.jsdeli
 For details, see <https://www.hestudio.net/docs/hestudio_bing_wallpaper_get.html>
 
 ### Call method
->
+
 > Run port at `3000`
->
+
 #### Get pictures
 
 ```text
