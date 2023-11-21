@@ -1,6 +1,6 @@
 {
   "name": "hestudio-bingwallpaper-get",
-  "version": "1.4.0-alpha.4",
+  "version": "1.4.0-alpha.5",
   "description": "A Bing wallpaper API interface that can directly image output images.",
   "main": "get.js",
   "scripts": {
@@ -28,9 +28,6 @@
     "wallpaper",
     "api"
   ],
-  "contributors": [
-    "undefined"
-  ],
   "displayName": "heStudio BingWallpaper Get",
   "os": [
     "linux"
@@ -42,7 +39,6 @@
     "express": "^4.18.2",
     "fs": "0.0.1-security",
     "node-schedule": "^2.1.1",
-    "path": "^0.12.7",
     "uglify-js": "^3.17.4"
   },
   "devDependencies": {
@@ -54,5 +50,8 @@
   },
   "exports": {
     ".": "./get.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

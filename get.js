@@ -1,19 +1,24 @@
 require('dotenv').config()
 
-const VERSION = '1.4.0-alpha.4'
+const VERSION = '1.4.0-alpha.5'
 
 const express = require('express')
 const schedule = require('node-schedule')
 const ChildProcess = require('child_process')
-const path = require('path')
 const fs = require('fs')
 const app = express()
 const dayjs = require('dayjs')
 
 const hbwgConfig = {}
 
-if (!fs.existsSync('./tmp/')) {
-  fs.mkdirSync('./tmp')
+if (process.env.hbwg_tempdir) {
+  hbwgConfig.tempDir = process.env.hbwg_tempdir
+} else {
+  hbwgConfig.tempDir = `${process.cwd()}/tmp/`
+}
+
+if (!fs.existsSync(hbwgConfig.tempDir)) {
+  fs.mkdirSync(hbwgConfig.tempDir)
 }
 
 if (process.env.hbwg_port) {
@@ -88,7 +93,7 @@ if (process.env.hbwg_header) {
  */
 const download = (bingsrc) => {
   const url = hbwgConfig.host + bingsrc.images[0].url
-  ChildProcess.exec(String('wget -O tmp/image.jpg ' + url))
+  ChildProcess.exec(String(`wget -O ${hbwgConfig.tempDir}image.jpg ${url}`))
   hbwgConfig.copyright = String(bingsrc.images[0].copyright)
   hbwgConfig.copyrightlink = String(bingsrc.images[0].copyrightlink)
   hbwgConfig.title = String(bingsrc.images[0].title)
@@ -131,12 +136,12 @@ module.exports = {
 
 logback(`heStudio BingWallpaper Get version: ${VERSION}`)
 if (process.env.hbwg_external) {
-  ChildProcess.exec(`uglifyjs ${process.env.hbwg_external} -m -o ${process.cwd()}/tmp/external.js`)
-  hbwgConfig.external = require(`${process.cwd()}/tmp/external.js`)
+  ChildProcess.exec(`uglifyjs ${process.env.hbwg_external} -m -o ${hbwgConfig.tempDir}external.js`)
+  hbwgConfig.external = require(`${hbwgConfig.tempDir}external.js`)
   logback('An external file has been imported.')
 } else if (fs.existsSync('./external.js')) {
-  ChildProcess.execSync(`uglifyjs ${process.cwd()}/external.js -m -o ${process.cwd()}/tmp/external.js`)
-  hbwgConfig.external = require(`${process.cwd()}/tmp/external.js`)
+  ChildProcess.execSync(`uglifyjs ${process.cwd()}/external.js -m -o ${hbwgConfig.tempDir}external.js`)
+  hbwgConfig.external = require(`${hbwgConfig.tempDir}external.js`)
   logback('An external file has been imported.')
 }
 
@@ -152,6 +157,8 @@ if (typeof hbwgConfig.external !== 'undefined') {
       logerr('getupdate option should be boolean.')
       process.exit(1)
     }
+  } else {
+    hbwgConfig.getupdate = true
   }
 } else {
   hbwgConfig.getupdate = true
@@ -287,6 +294,7 @@ if (typeof hbwgConfig.external !== 'undefined') {
 // debug
 if (typeof hbwgConfig.external !== 'undefined') {
   if (hbwgConfig.external.debug) {
+    logwarn('Debug Mode is enable!')
     if (!hbwgConfig.external.debug.url) {
       hbwgConfig.apiconfig.debug = '/debug'
     } else {
@@ -337,7 +345,7 @@ if (hbwgConfig.apiconfig.debug) {
         <div>
           <p>Title: ${hbwgConfig.title}</p>
           <p>Copyright: ${hbwgConfig.copyright}</p>
-          <p>Copyright Link: ${hbwgConfig.copyrightlink}
+          <p>Copyright Link: ${hbwgConfig.copyrightlink}</p>
         </div>
       </div>
     </div>
@@ -347,8 +355,8 @@ if (hbwgConfig.apiconfig.debug) {
         <p>Port: ${hbwgConfig.port}</p>
         <p>isGetUpdate: ${hbwgConfig.getupdate}</p>
         <p>Update PackageUrl: ${hbwgConfig.packageurl}</p>
-        <p>Request header for getting IP: ${hbwgConfig.header}
-        <p>
+        <p>Request header for getting IP: ${hbwgConfig.header}</p>
+        <p>Temp Dir: ${hbwgConfig.tempDir}</p>
       </div>
     </div>
   </div>
@@ -436,7 +444,7 @@ if (hbwgConfig.apiconfig.getimage) {
       global.ip = ip
     }
     const ip = global.ip
-    res.sendFile(path.join(process.cwd(), 'tmp/image.jpg'))
+    res.sendFile(`${hbwgConfig.tempDir}image.jpg`)
     getback(ip, hbwgConfig.apiconfig.getimage)
   })
 }

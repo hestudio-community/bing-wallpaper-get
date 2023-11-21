@@ -13,6 +13,10 @@
 1. Fix the bug that `external.js` could not load the built-in export component.
 2. Move the program version number loading display to the first place.
 3. `/debug` (GET) debugging interface
+#### 1.4.0-alpha.5
+1. Allow modification of the cache directory via environment variables.
+2. Provides `warn` level notifications on the console when debug mode is on.
+3. Fix bugs in `getupdate`.
 
 ### 1.3.2
 1. Allow custom real IP addresses to be passed into the header.
