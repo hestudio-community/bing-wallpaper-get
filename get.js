@@ -1,6 +1,6 @@
 require('dotenv').config()
 
-const VERSION = '1.4.0-alpha.5'
+const VERSION = '1.4.0-alpha.6'
 
 const express = require('express')
 const schedule = require('node-schedule')
@@ -136,11 +136,15 @@ module.exports = {
 
 logback(`heStudio BingWallpaper Get version: ${VERSION}`)
 if (process.env.hbwg_external) {
-  ChildProcess.exec(`uglifyjs ${process.env.hbwg_external} -m -o ${hbwgConfig.tempDir}external.js`)
+  ChildProcess.execSync(`uglifyjs ${process.env.hbwg_external} -m -o ${hbwgConfig.tempDir}external.js`, {
+    cwd: __dirname
+  })
   hbwgConfig.external = require(`${hbwgConfig.tempDir}external.js`)
   logback('An external file has been imported.')
 } else if (fs.existsSync('./external.js')) {
-  ChildProcess.execSync(`uglifyjs ${process.cwd()}/external.js -m -o ${hbwgConfig.tempDir}external.js`)
+  ChildProcess.execSync(`uglifyjs ${process.cwd()}/external.js -m -o ${hbwgConfig.tempDir}external.js`, {
+    cwd: __dirname
+  })
   hbwgConfig.external = require(`${hbwgConfig.tempDir}external.js`)
   logback('An external file has been imported.')
 }
@@ -324,7 +328,7 @@ if (hbwgConfig.apiconfig.debug) {
 </head>
 
 <body>
-  <h1>Configurations</h1>
+  <h1>Debug Information</h1>
   <div>
     <div>
       <h3>API URL Configurations</h3>
@@ -357,6 +361,22 @@ if (hbwgConfig.apiconfig.debug) {
         <p>Update PackageUrl: ${hbwgConfig.packageurl}</p>
         <p>Request header for getting IP: ${hbwgConfig.header}</p>
         <p>Temp Dir: ${hbwgConfig.tempDir}</p>
+      </div>
+    </div>
+    <div>
+      <h3>For Developer</h3>
+      <div>
+        <p>TZ: ${process.env.TZ}</p>
+        <p>Running Dir: ${process.cwd()}</p>
+        <p>Core Dir: ${__dirname}</p>
+        <p>Temp Dir: ${hbwgConfig.tempDir}</p>
+        <p>Node Version: ${process.version}</p>
+        <p>Node Dir: ${process.execPath}
+        <p>Arch Information: ${process.arch}</p>
+        <p>Platform Information: ${process.platform}</p>
+        <p>PID: ${process.pid}</p>
+        <p>Memory Usage: ${JSON.stringify(process.memoryUsage())}</p>
+        <p>Resource Usage ${JSON.stringify(process.resourceUsage())}</p>
       </div>
     </div>
   </div>
