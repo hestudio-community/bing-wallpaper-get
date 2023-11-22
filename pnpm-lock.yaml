@@ -14,9 +14,6 @@ dependencies:
   express:
     specifier: ^4.18.2
     version: 4.18.2
-  fs:
-    specifier: 0.0.1-security
-    version: 0.0.1-security
   node-schedule:
     specifier: ^2.1.1
     version: 2.1.1
@@ -546,6 +543,15 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
+  /eslint-compat-utils@0.1.2(eslint@8.54.0):
+    resolution: {integrity: sha512-Jia4JDldWnFNIru1Ehx1H5s9/yxiRHY/TimCuUc0jNexew3cF1gI6CYZil1ociakfWO3rRqFjl1mskBblB3RYg==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      eslint: '>=6.0.0'
+    dependencies:
+      eslint: 8.54.0
+    dev: true
+
   /eslint-config-standard@17.1.0(eslint-plugin-import@2.29.0)(eslint-plugin-n@16.3.1)(eslint-plugin-promise@6.1.1)(eslint@8.54.0):
     resolution: {integrity: sha512-IwHwmaBNtDK4zDHQukFDW5u/aTb8+meQWZvNFWkiGmbWjD6bqyuSSBxxXKkCftCUzc1zwCH2m/baCNDLGmuO5Q==}
     engines: {node: '>=12.0.0'}
@@ -599,8 +605,8 @@ packages:
       - supports-color
     dev: true
 
-  /eslint-plugin-es-x@7.3.0(eslint@8.54.0):
-    resolution: {integrity: sha512-W9zIs+k00I/I13+Bdkl/zG1MEO07G97XjUSQuH117w620SJ6bHtLUmoMvkGA2oYnI/gNdr+G7BONLyYnFaLLEQ==}
+  /eslint-plugin-es-x@7.4.0(eslint@8.54.0):
+    resolution: {integrity: sha512-WJa3RhYzBtl8I37ebY9p76s61UhZyi4KaFOnX2A5r32RPazkXj5yoT6PGnD02dhwzEUj0KwsUdqfKDd/OuvGsw==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       eslint: '>=8'
@@ -608,6 +614,7 @@ packages:
       '@eslint-community/eslint-utils': 4.4.0(eslint@8.54.0)
       '@eslint-community/regexpp': 4.10.0
       eslint: 8.54.0
+      eslint-compat-utils: 0.1.2(eslint@8.54.0)
     dev: true
 
   /eslint-plugin-import@2.29.0(eslint@8.54.0):
@@ -653,7 +660,7 @@ packages:
       '@eslint-community/eslint-utils': 4.4.0(eslint@8.54.0)
       builtins: 5.0.1
       eslint: 8.54.0
-      eslint-plugin-es-x: 7.3.0(eslint@8.54.0)
+      eslint-plugin-es-x: 7.4.0(eslint@8.54.0)
       get-tsconfig: 4.7.2
       ignore: 5.3.0
       is-builtin-module: 3.2.1
@@ -889,10 +896,6 @@ packages:
   /fs.realpath@1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
     dev: true
-
-  /fs@0.0.1-security:
-    resolution: {integrity: sha512-3XY9e1pP0CVEUCdj5BmfIZxRBTSDycnbqhIOGec9QYtmVH2fbLpj86CFWkrNOkt/Fvty4KZG5lTglL9j/gJ87w==}
-    dev: false
 
   /function-bind@1.1.2:
     resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
