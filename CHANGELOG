@@ -18,8 +18,11 @@
 2. Provides `warn` level notifications on the console when debug mode is on.
 3. Fix bugs in `getupdate`.
 #### 1.4.0-alpha.6
+1. Update Debug Mode
+#### 1.4.0-alpha.7
 1. Fixed the problem that `external.js` could not be loaded normally in npm and docker running modes.
-2. Update Debug Mode
+2. Add a fault tolerance mechanism for online requests.
+3. Update document.
 
 ### 1.3.2
 1. Allow custom real IP addresses to be passed into the header.

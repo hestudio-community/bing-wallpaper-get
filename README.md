@@ -4,7 +4,7 @@
 
 This is the Develop version to preview the `v1.4.0` version of the update. The update is detailed at https://storage.hestudio.net/s/LXiX
 
-You can listen for version updates on the Develop branch via `https://cdn.jsdelivr.net/npm/hestudio-bingwallpaper-get@alpha/package.json`.
+You can listen for version updates on the Develop branch via `https://unpkg.com/hestudio-bingwallpaper-get@alpha/package.json`.
 
 ### Demo and detailed documentation
 
@@ -61,7 +61,7 @@ git clone https://github.com/hestudio-community/bing-wallpaper-get.git
 cd bing-wallpaper-get
 npm install --global pnpm
 pnpm install --production
-pnpm server
+pnpm run server
 ```
 
 > We will use `pnpm` as the package manager after version 1.3.2. If you deploy in this way, please switch in time to avoid any impact.
