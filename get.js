@@ -1,6 +1,6 @@
 require('dotenv').config()
 
-const VERSION = '1.4.0-alpha.6'
+const VERSION = '1.4.0-alpha.7'
 
 const express = require('express')
 const schedule = require('node-schedule')
@@ -105,9 +105,14 @@ const cacheimg = () => {
     method: 'GET',
     redirect: 'follow'
   }
-  fetch(hbwgConfig.api, requestOptions)
-    .then((response) => response.json())
-    .then((result) => download(result))
+  try {
+    fetch(hbwgConfig.api, requestOptions)
+      .then((response) => response.json())
+      .then((result) => download(result))
+  } catch (error) {
+    logerr('Unable to connect to Bing server, the core function of this program cannot be realized.')
+    process.exit(2)
+  }
 }
 
 // 定时
@@ -136,13 +141,13 @@ module.exports = {
 
 logback(`heStudio BingWallpaper Get version: ${VERSION}`)
 if (process.env.hbwg_external) {
-  ChildProcess.execSync(`uglifyjs ${process.env.hbwg_external} -m -o ${hbwgConfig.tempDir}external.js`, {
+  ChildProcess.execSync(`npx uglifyjs ${process.env.hbwg_external} -m -o ${hbwgConfig.tempDir}external.js`, {
     cwd: __dirname
   })
   hbwgConfig.external = require(`${hbwgConfig.tempDir}external.js`)
   logback('An external file has been imported.')
 } else if (fs.existsSync('./external.js')) {
-  ChildProcess.execSync(`uglifyjs ${process.cwd()}/external.js -m -o ${hbwgConfig.tempDir}external.js`, {
+  ChildProcess.execSync(`npx uglifyjs ${process.cwd()}/external.js -m -o ${hbwgConfig.tempDir}external.js`, {
     cwd: __dirname
   })
   hbwgConfig.external = require(`${hbwgConfig.tempDir}external.js`)
@@ -179,14 +184,18 @@ if (hbwgConfig.getupdate !== false) {
     redirect: 'follow'
   }
   function AfterGetVersion (src) {
-    const version = src.version
-    if (version !== VERSION) {
-      logwarn(`New Version! ${version} is ready.`)
+    hbwgConfig.version = src.version
+    if (hbwgConfig.version !== VERSION) {
+      logwarn(`New Version! ${hbwgConfig.version} is ready.`)
     }
   }
-  fetch(hbwgConfig.packageurl, requestOptions)
-    .then((response) => response.json())
-    .then((result) => AfterGetVersion(result))
+  try {
+    fetch(hbwgConfig.packageurl, requestOptions)
+      .then((response) => response.json())
+      .then((result) => AfterGetVersion(result))
+  } catch (error) {
+    logerr('Unable to connect to the update server.')
+  }
 }
 
 if (typeof hbwgConfig.external !== 'undefined') {
@@ -214,22 +223,31 @@ const job = schedule.scheduleJob(rule, function () {
       redirect: 'follow'
     }
     function AfterGetVersion (src) {
-      const version = src.version
-      if (version !== VERSION) {
-        logwarn(`New Version! ${version} is ready.`)
+      hbwgConfig.version = src.version
+      if (hbwgConfig.version !== VERSION) {
+        logwarn(`New Version! ${hbwgConfig.version} is ready.`)
       }
     }
-    fetch(hbwgConfig.packageurl, requestOptions)
-      .then((response) => response.json())
-      .then((result) => AfterGetVersion(result))
+    try {
+      fetch(hbwgConfig.packageurl, requestOptions)
+        .then((response) => response.json())
+        .then((result) => AfterGetVersion(result))
+    } catch (error) {
+      logerr('Unable to connect to the update server.')
+    }
   }
   const requestOptions = {
     method: 'GET',
     redirect: 'follow'
   }
-  fetch(hbwgConfig.api, requestOptions)
-    .then((response) => response.json())
-    .then((result) => download(result))
+  try {
+    fetch(hbwgConfig.api, requestOptions)
+      .then((response) => response.json())
+      .then((result) => download(result))
+  } catch (error) {
+    logerr('Unable to connect to Bing server, the core function of this program cannot be realized.')
+    process.exit(2)
+  }
 })
 
 cacheimg()
@@ -367,6 +385,8 @@ if (hbwgConfig.apiconfig.debug) {
       <h3>For Developer</h3>
       <div>
         <p>TZ: ${process.env.TZ}</p>
+        <p>Program Version: ${VERSION}</p>
+        <p>Latest Version: ${hbwgConfig.version}</p>
         <p>Running Dir: ${process.cwd()}</p>
         <p>Core Dir: ${__dirname}</p>
         <p>Temp Dir: ${hbwgConfig.tempDir}</p>
@@ -375,7 +395,7 @@ if (hbwgConfig.apiconfig.debug) {
         <p>Arch Information: ${process.arch}</p>
         <p>Platform Information: ${process.platform}</p>
         <p>PID: ${process.pid}</p>
-        <p>Memory Usage: ${JSON.stringify(process.memoryUsage())}</p>
+        <p>Memory Usage: ${process.memoryUsage().rss / 1048576} MB</p>
         <p>Resource Usage ${JSON.stringify(process.resourceUsage())}</p>
       </div>
     </div>
