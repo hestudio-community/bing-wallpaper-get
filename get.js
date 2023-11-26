@@ -1,6 +1,6 @@
 require('dotenv').config()
 
-const VERSION = '1.4.0-alpha.7'
+const VERSION = '1.4.0-alpha.8'
 
 const express = require('express')
 const schedule = require('node-schedule')
@@ -92,6 +92,7 @@ if (process.env.hbwg_header) {
  * @param {object} bingsrc
  */
 const download = (bingsrc) => {
+  hbwgConfig.bingsrc = bingsrc
   const url = hbwgConfig.host + bingsrc.images[0].url
   ChildProcess.exec(String(`wget -O ${hbwgConfig.tempDir}image.jpg ${url}`))
   hbwgConfig.copyright = String(bingsrc.images[0].copyright)
@@ -265,7 +266,8 @@ hbwgConfig.apiconfig = {
   getimage: '/getimage',
   gettitle: '/gettitle',
   getcopyright: '/getcopyright',
-  debug: false
+  debug: false,
+  bingsrc: false
 }
 
 // api configuration
@@ -313,6 +315,22 @@ if (typeof hbwgConfig.external !== 'undefined') {
   }
 }
 
+// bing source config
+if (typeof hbwgConfig.external !== 'undefined') {
+  if (hbwgConfig.external.bingsrc) {
+    if (hbwgConfig.external.bingsrc.url) {
+      try {
+        hbwgConfig.apiconfig.bingsrc = String(hbwgConfig.external.bingsrc.url)
+      } catch (error) {
+        logerr('url option should be string.')
+        process.exit(1)
+      }
+    } else {
+      hbwgConfig.apiconfig.bingsrc = '/bingsrc'
+    }
+  }
+}
+
 // debug
 if (typeof hbwgConfig.external !== 'undefined') {
   if (hbwgConfig.external.debug) {
@@ -354,6 +372,7 @@ if (hbwgConfig.apiconfig.debug) {
         <p>getimage: ${hbwgConfig.apiconfig.getimage}</p>
         <p>gettitle: ${hbwgConfig.apiconfig.gettitle}</p>
         <p>getcopyright: ${hbwgConfig.apiconfig.getcopyright}</p>
+        <p>bingsrc: ${hbwgConfig.apiconfig.bingsrc}</p>
       </div>
     </div>
     <div>
@@ -368,6 +387,7 @@ if (hbwgConfig.apiconfig.debug) {
           <p>Title: ${hbwgConfig.title}</p>
           <p>Copyright: ${hbwgConfig.copyright}</p>
           <p>Copyright Link: ${hbwgConfig.copyrightlink}</p>
+          <p>Bing Source: ${JSON.stringify(hbwgConfig.bingsrc)}</p>
         </div>
       </div>
     </div>
@@ -523,6 +543,22 @@ if (hbwgConfig.apiconfig.getcopyright) {
       copyrightlink: hbwgConfig.copyrightlink
     })
     getback(ip, hbwgConfig.apiconfig.getcopyright)
+  })
+}
+
+if (hbwgConfig.apiconfig.bingsrc) {
+  app.get(hbwgConfig.apiconfig.bingsrc, (req, res) => {
+    const headip = req.headers[hbwgConfig.header]
+    if (headip === undefined) {
+      const ip = req.ip
+      global.ip = ip
+    } else {
+      const ip = headip
+      global.ip = ip
+    }
+    const ip = global.ip
+    res.send(hbwgConfig.bingsrc)
+    getback(ip, hbwgConfig.apiconfig.bingsrc)
   })
 }
 
