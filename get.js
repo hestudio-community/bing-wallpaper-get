@@ -1,6 +1,6 @@
 require('dotenv').config()
 
-const VERSION = '1.4.0-alpha.8'
+const VERSION = '1.4.0-alpha.9'
 
 const express = require('express')
 const schedule = require('node-schedule')
@@ -153,6 +153,11 @@ if (process.env.hbwg_external) {
   })
   hbwgConfig.external = require(`${hbwgConfig.tempDir}external.js`)
   logback('An external file has been imported.')
+}
+
+if (!ChildProcess.execSync('wget --version').toString().split('\n')[0].includes('GNU Wget')) {
+  logerr('Wget not found. Please install it.')
+  process.exit(-1)
 }
 
 // 1.3.0 Version update prompt
@@ -415,6 +420,7 @@ if (hbwgConfig.apiconfig.debug) {
         <p>Arch Information: ${process.arch}</p>
         <p>Platform Information: ${process.platform}</p>
         <p>PID: ${process.pid}</p>
+        <p>Wget Version: ${ChildProcess.execSync('wget --version').toString().split('\n')[0]}</p>
         <p>Memory Usage: ${process.memoryUsage().rss / 1048576} MB</p>
         <p>Resource Usage ${JSON.stringify(process.resourceUsage())}</p>
       </div>
