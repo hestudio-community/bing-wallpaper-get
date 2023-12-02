@@ -336,142 +336,43 @@ if (typeof hbwgConfig.external !== 'undefined') {
   }
 }
 
-// debug
+// robots.txt
 if (typeof hbwgConfig.external !== 'undefined') {
-  if (hbwgConfig.external.debug) {
-    logwarn('Debug Mode is enable!')
-    if (!hbwgConfig.external.debug.url) {
-      hbwgConfig.apiconfig.debug = '/debug'
+  if (hbwgConfig.external.robots === false) hbwgConfig.robots = false
+  else {
+    if (hbwgConfig.external.robots === true || !hbwgConfig.external.robots) {
+      hbwgConfig.robots = `
+User-agent: *
+Disallow: /
+      `
     } else {
       try {
-        hbwgConfig.apiconfig.debug = String(hbwgConfig.external.debug.url)
+        hbwgConfig.robots = String(hbwgConfig.external.robots)
       } catch (error) {
-        logerr('url option should be string.')
+        logerr('robots opinion should be string or boolean.')
         process.exit(1)
       }
     }
-    if (hbwgConfig.external.debug.passwd) {
-      hbwgConfig.DebugPasswd = hbwgConfig.external.debug.passwd
-    }
   }
+} else {
+  hbwgConfig.robots = `
+User-agent: *
+Disallow: /
+  `
 }
-
-if (hbwgConfig.apiconfig.debug) {
-  app.get(hbwgConfig.apiconfig.debug, (req, res) => {
-    const ShowDebug = () => {
-      res.setHeader('Content-Type', 'text/html')
-      res.send(`
-<!DOCTYPE html>
-<html>
-
-<head>
-  <title>Debug - heStudio BingWallpaper Get</title>
-</head>
-
-<body>
-  <h1>Debug Information</h1>
-  <div>
-    <div>
-      <h3>API URL Configurations</h3>
-      <div>
-        <p>getimage: ${hbwgConfig.apiconfig.getimage}</p>
-        <p>gettitle: ${hbwgConfig.apiconfig.gettitle}</p>
-        <p>getcopyright: ${hbwgConfig.apiconfig.getcopyright}</p>
-        <p>bingsrc: ${hbwgConfig.apiconfig.bingsrc}</p>
-      </div>
-    </div>
-    <div>
-      <h3>Source</h3>
-      <div>
-        <h4>Configurations</h4>
-        <div>
-          <p>Bing API: ${hbwgConfig.api}</p>
-        </div>
-        <h4>From Bing</h4>
-        <div>
-          <p>Title: ${hbwgConfig.title}</p>
-          <p>Copyright: ${hbwgConfig.copyright}</p>
-          <p>Copyright Link: ${hbwgConfig.copyrightlink}</p>
-          <p>Bing Source: ${JSON.stringify(hbwgConfig.bingsrc)}</p>
-        </div>
-      </div>
-    </div>
-    <div>
-      <h3>Server Configurations</h3>
-      <div>
-        <p>Port: ${hbwgConfig.port}</p>
-        <p>isGetUpdate: ${hbwgConfig.getupdate}</p>
-        <p>Update PackageUrl: ${hbwgConfig.packageurl}</p>
-        <p>Request header for getting IP: ${hbwgConfig.header}</p>
-        <p>Temp Dir: ${hbwgConfig.tempDir}</p>
-      </div>
-    </div>
-    <div>
-      <h3>For Developer</h3>
-      <div>
-        <p>TZ: ${process.env.TZ}</p>
-        <p>Program Version: ${VERSION}</p>
-        <p>Latest Version: ${hbwgConfig.version}</p>
-        <p>Running Dir: ${process.cwd()}</p>
-        <p>Core Dir: ${__dirname}</p>
-        <p>Temp Dir: ${hbwgConfig.tempDir}</p>
-        <p>Node Version: ${process.version}</p>
-        <p>Node Dir: ${process.execPath}
-        <p>Arch Information: ${process.arch}</p>
-        <p>Platform Information: ${process.platform}</p>
-        <p>PID: ${process.pid}</p>
-        <p>Wget Version: ${ChildProcess.execSync('wget --version').toString().split('\n')[0]}</p>
-        <p>Memory Usage: ${process.memoryUsage().rss / 1048576} MB</p>
-        <p>Resource Usage ${JSON.stringify(process.resourceUsage())}</p>
-      </div>
-    </div>
-  </div>
-</body>
-
-</html>
-      `)
-    }
-    if (hbwgConfig.DebugPasswd) {
-      if (req.query.passwd === hbwgConfig.DebugPasswd) {
-        const headip = req.headers[hbwgConfig.header]
-        if (headip === undefined) {
-          const ip = req.ip
-          global.ip = ip
-        } else {
-          const ip = headip
-          global.ip = ip
-        }
-        const ip = global.ip
-        getback(ip, `${hbwgConfig.apiconfig.debug}?passwd=***`)
-        ShowDebug()
-      } else {
-        const headip = req.headers[hbwgConfig.header]
-        if (headip === undefined) {
-          const ip = req.ip
-          global.ip = ip
-        } else {
-          const ip = headip
-          global.ip = ip
-        }
-        const ip = global.ip
-        getback(ip, `${hbwgConfig.apiconfig.debug}?passwd=***`)
-        logwarn('Password is wrong!')
-        res.setHeader('Content-Type', 'text/html')
-        res.status(403).send('<script>alert("Password is wrong!")</script>')
-      }
+if (hbwgConfig.robots !== false) {
+  app.get('/robots.txt', (req, res) => {
+    const headip = req.headers[hbwgConfig.header]
+    if (headip === undefined) {
+      const ip = req.ip
+      global.ip = ip
     } else {
-      const headip = req.headers[hbwgConfig.header]
-      if (headip === undefined) {
-        const ip = req.ip
-        global.ip = ip
-      } else {
-        const ip = headip
-        global.ip = ip
-      }
-      const ip = global.ip
-      getback(ip, `${hbwgConfig.apiconfig.debug}`)
-      ShowDebug()
+      const ip = headip
+      global.ip = ip
     }
+    const ip = global.ip
+    res.send(hbwgConfig.robots)
+    getback(ip, '/robots.txt')
   })
 }
 
@@ -565,6 +466,146 @@ if (hbwgConfig.apiconfig.bingsrc) {
     const ip = global.ip
     res.send(hbwgConfig.bingsrc)
     getback(ip, hbwgConfig.apiconfig.bingsrc)
+  })
+}
+
+// debug
+if (typeof hbwgConfig.external !== 'undefined') {
+  if (hbwgConfig.external.debug) {
+    logwarn('Debug Mode is enable!')
+    if (!hbwgConfig.external.debug.url) {
+      hbwgConfig.apiconfig.debug = '/debug'
+    } else {
+      try {
+        hbwgConfig.apiconfig.debug = String(hbwgConfig.external.debug.url)
+      } catch (error) {
+        logerr('url option should be string.')
+        process.exit(1)
+      }
+    }
+    if (hbwgConfig.external.debug.passwd) {
+      hbwgConfig.DebugPasswd = hbwgConfig.external.debug.passwd
+    }
+  }
+}
+
+if (hbwgConfig.apiconfig.debug) {
+  app.get(hbwgConfig.apiconfig.debug, (req, res) => {
+    const ShowDebug = () => {
+      res.setHeader('Content-Type', 'text/html')
+      res.send(`
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Debug - heStudio BingWallpaper Get</title>
+</head>
+
+<body>
+  <h1>Debug Information</h1>
+  <div>
+    <div>
+      <h3>API URL Configurations</h3>
+      <div>
+        <p>getimage: ${hbwgConfig.apiconfig.getimage}</p>
+        <p>gettitle: ${hbwgConfig.apiconfig.gettitle}</p>
+        <p>getcopyright: ${hbwgConfig.apiconfig.getcopyright}</p>
+        <p>bingsrc: ${hbwgConfig.apiconfig.bingsrc}</p>
+      </div>
+    </div>
+    <div>
+      <h3>Source</h3>
+      <div>
+        <h4>Configurations</h4>
+        <div>
+          <p>Bing API: ${hbwgConfig.api}</p>
+        </div>
+        <h4>From Bing</h4>
+        <div>
+          <p>Title: ${hbwgConfig.title}</p>
+          <p>Copyright: ${hbwgConfig.copyright}</p>
+          <p>Copyright Link: ${hbwgConfig.copyrightlink}</p>
+          <p>Bing Source: ${JSON.stringify(hbwgConfig.bingsrc)}</p>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h3>Server Configurations</h3>
+      <div>
+        <p>Port: ${hbwgConfig.port}</p>
+        <p>isGetUpdate: ${hbwgConfig.getupdate}</p>
+        <p>Update PackageUrl: ${hbwgConfig.packageurl}</p>
+        <p>Request header for getting IP: ${hbwgConfig.header}</p>
+        <p>Temp Dir: ${hbwgConfig.tempDir}</p>
+        <p>robots.txt: ${hbwgConfig.robots}</p>
+      </div>
+    </div>
+    <div>
+      <h3>For Developer</h3>
+      <div>
+        <p>TZ: ${process.env.TZ}</p>
+        <p>Program Version: ${VERSION}</p>
+        <p>Latest Version: ${hbwgConfig.version}</p>
+        <p>Running Dir: ${process.cwd()}</p>
+        <p>Core Dir: ${__dirname}</p>
+        <p>Temp Dir: ${hbwgConfig.tempDir}</p>
+        <p>Node Version: ${process.version}</p>
+        <p>Node Dir: ${process.execPath}
+        <p>Arch Information: ${process.arch}</p>
+        <p>Platform Information: ${process.platform}</p>
+        <p>PID: ${process.pid}</p>
+        <p>Wget Version: ${ChildProcess.execSync('wget --version').toString().split('\n')[0]}</p>
+        <p>Memory Usage: ${process.memoryUsage().rss / 1048576} MB</p>
+        <p>Resource Usage ${JSON.stringify(process.resourceUsage())}</p>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
+      `)
+    }
+    if (hbwgConfig.DebugPasswd) {
+      if (req.query.passwd === hbwgConfig.DebugPasswd) {
+        const headip = req.headers[hbwgConfig.header]
+        if (headip === undefined) {
+          const ip = req.ip
+          global.ip = ip
+        } else {
+          const ip = headip
+          global.ip = ip
+        }
+        const ip = global.ip
+        getback(ip, `${hbwgConfig.apiconfig.debug}?passwd=***`)
+        ShowDebug()
+      } else {
+        const headip = req.headers[hbwgConfig.header]
+        if (headip === undefined) {
+          const ip = req.ip
+          global.ip = ip
+        } else {
+          const ip = headip
+          global.ip = ip
+        }
+        const ip = global.ip
+        getback(ip, `${hbwgConfig.apiconfig.debug}?passwd=***`)
+        logwarn('Password is wrong!')
+        res.setHeader('Content-Type', 'text/html')
+        res.status(403).send('<script>alert("Password is wrong!")</script>')
+      }
+    } else {
+      const headip = req.headers[hbwgConfig.header]
+      if (headip === undefined) {
+        const ip = req.ip
+        global.ip = ip
+      } else {
+        const ip = headip
+        global.ip = ip
+      }
+      const ip = global.ip
+      getback(ip, `${hbwgConfig.apiconfig.debug}`)
+      ShowDebug()
+    }
   })
 }
 
