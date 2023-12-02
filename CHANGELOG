@@ -23,8 +23,12 @@
 1. Fixed the problem that `external.js` could not be loaded normally in npm and docker running modes.
 2. Add a fault tolerance mechanism for online requests.
 3. Update document.
-### 1.4.0-alpha.8
+#### 1.4.0-alpha.8
 1. Returns the result of the original request to the bing server.
+#### 1.4.0-alpha.9
+1. Check if wget exists on the device.
+2. Add `robots.txt`
+3. Developers can customize some tasks to be performed when the server refreshes resources.
 
 ### 1.3.2
 1. Allow custom real IP addresses to be passed into the header.

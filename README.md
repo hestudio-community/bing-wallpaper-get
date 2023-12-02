@@ -4,7 +4,15 @@
 
 This is the Develop version to preview the `v1.4.0` version of the update. The update is detailed at https://storage.hestudio.net/s/LXiX
 
-You can listen for version updates on the Develop branch via `https://unpkg.com/hestudio-bingwallpaper-get@alpha/package.json`.
+This is the last alpha release, and we will be releasing a beta version later that focuses on performance scheduling optimizations.
+
+We will make the following schedule of updates:
+
+- alpha: Focus on new feature updates.
+- beta: Focus on performance optimization.
+- rc: Focus on adapting to more devices.
+
+Thank you for looking forward to our updates, the develop branch will stop updating in the near future, and we will move to the beta branch for updates.We will remove all non-stable branches when the full version is released.
 
 ### Demo and detailed documentation
 
