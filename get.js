@@ -99,6 +99,12 @@ const download = (bingsrc) => {
   hbwgConfig.copyrightlink = String(bingsrc.images[0].copyrightlink)
   hbwgConfig.title = String(bingsrc.images[0].title)
   logback('Refresh Successfully!')
+  if (typeof hbwgConfig.external !== 'undefined') {
+    if (hbwgConfig.external.refreshtask) {
+      logwarn('task is running...')
+      hbwgConfig.external.refreshtask()
+    }
+  }
 }
 
 const cacheimg = () => {
