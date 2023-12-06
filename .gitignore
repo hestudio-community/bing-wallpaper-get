@@ -6,3 +6,4 @@ external.js
 tmp
 .yarn
 .pnp*
+dist
