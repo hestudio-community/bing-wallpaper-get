@@ -32,6 +32,12 @@
 #### 1.4.0-beta.1
 1. Optimize code structure and reduce redundant structures.
 2. Fix a legacy issue in the alpha version: after renaming one of the api's, the unrenamed api address would report undefined.
+#### 1.4.0-beta.2
+1. repair [#29](https://github.com/hestudio-community/bing-wallpaper-get/issues/29)
+2. Optimize code structure and reduce redundant structures.
+3. Cache the image into memory to reduce repeated reads to disk.
+4. Optimize the loading mechanism of `external.js` files.
+5. Optimize temp management mechanisms.
 
 ### 1.3.2
 1. Allow custom real IP addresses to be passed into the header.
