@@ -1,6 +1,6 @@
 require('dotenv').config()
 
-const VERSION = '1.4.0-beta.1'
+const VERSION = '1.4.0-beta.2'
 
 const express = require('express')
 const schedule = require('node-schedule')
@@ -8,6 +8,7 @@ const ChildProcess = require('child_process')
 const fs = require('fs')
 const app = express()
 const dayjs = require('dayjs')
+const crypto = require('node:crypto')
 
 const hbwgConfig = {}
 
@@ -16,7 +17,17 @@ if (process.env.hbwg_tempdir) hbwgConfig.tempDir = process.env.hbwg_tempdir
 else hbwgConfig.tempDir = `${process.cwd()}/tmp/`
 
 // check tempdir
-if (!fs.existsSync(hbwgConfig.tempDir)) fs.mkdirSync(hbwgConfig.tempDir)
+if (!fs.existsSync(hbwgConfig.tempDir)) {
+  fs.mkdirSync(hbwgConfig.tempDir)
+  fs.writeFileSync(`${hbwgConfig.tempDir}.version.hbwg_cache`, VERSION)
+} else {
+  // eslint-disable-next-line eqeqeq
+  if (!fs.existsSync(`${hbwgConfig.tempDir}.version.hbwg_cache`) || fs.readFileSync(`${hbwgConfig.tempDir}.version.hbwg_cache`) != VERSION) {
+    ChildProcess.execSync(`rm ${hbwgConfig.tempDir} -rf`)
+    fs.mkdirSync(hbwgConfig.tempDir)
+    fs.writeFileSync(`${hbwgConfig.tempDir}.version.hbwg_cache`, VERSION)
+  }
+}
 
 /**
  * Record GET request log
@@ -73,15 +84,17 @@ else hbwgConfig.header = 'x-real-ip'
 const download = (bingsrc) => {
   hbwgConfig.bingsrc = bingsrc
   const url = hbwgConfig.host + bingsrc.images[0].url
-  ChildProcess.exec(String(`wget -O ${hbwgConfig.tempDir}image.jpg ${url}`))
+  ChildProcess.exec(String(`wget -O ${hbwgConfig.tempDir}image.jpg ${url}`), () => {
+    hbwgConfig.image = fs.readFileSync(`${hbwgConfig.tempDir}image.jpg`)
+  })
   hbwgConfig.copyright = String(bingsrc.images[0].copyright)
   hbwgConfig.copyrightlink = String(bingsrc.images[0].copyrightlink)
   hbwgConfig.title = String(bingsrc.images[0].title)
-  logback('Refresh Successfully!')
   if (typeof hbwgConfig.external !== 'undefined' && hbwgConfig.external.refreshtask) {
     logwarn('task is running...')
     hbwgConfig.external.refreshtask()
   }
+  logback('Refresh Successfully!')
 }
 
 const cacheimg = () => {
@@ -119,19 +132,46 @@ module.exports = {
 }
 
 logback(`heStudio BingWallpaper Get version: ${VERSION}`)
-if (process.env.hbwg_external) {
-  ChildProcess.execSync(`npx uglifyjs ${process.env.hbwg_external} -m -o ${hbwgConfig.tempDir}external.js`, {
-    cwd: __dirname
-  })
-  hbwgConfig.external = require(`${hbwgConfig.tempDir}external.js`)
-  logback('An external file has been imported.')
-} else if (fs.existsSync('./external.js')) {
-  ChildProcess.execSync(`npx uglifyjs ${process.cwd()}/external.js -m -o ${hbwgConfig.tempDir}external.js`, {
-    cwd: __dirname
-  })
-  hbwgConfig.external = require(`${hbwgConfig.tempDir}external.js`)
-  logback('An external file has been imported.')
+
+// external.js
+/**
+ * @param {string} path external.js path
+ */
+function LoadExternal (path) {
+  if (fs.existsSync(`${hbwgConfig.tempDir}external.js`) && fs.existsSync(`${hbwgConfig.tempDir}.external.hbwg_cahce`)) {
+    const hash = crypto.createHash('sha256')
+    hash.update(fs.readFileSync(`${hbwgConfig.tempDir}external.js`))
+    hash.update(fs.readFileSync(path))
+    const CacheKey = String(hash.digest('hex'))
+    // eslint-disable-next-line eqeqeq
+    if (fs.readFileSync(`${hbwgConfig.tempDir}.external.hbwg_cahce`) == CacheKey) {
+      hbwgConfig.external = require(`${hbwgConfig.tempDir}external.js`)
+      logback('An external file has been imported with cache.')
+    } else {
+      ChildProcess.execSync(`npx uglifyjs ${path} -m -o ${hbwgConfig.tempDir}external.js`, {
+        cwd: __dirname
+      })
+      const hashRefresh = crypto.createHash('sha256')
+      hashRefresh.update(fs.readFileSync(`${hbwgConfig.tempDir}external.js`))
+      hashRefresh.update(fs.readFileSync(path))
+      fs.writeFileSync(`${hbwgConfig.tempDir}.external.hbwg_cahce`, hashRefresh.digest('hex'))
+      hbwgConfig.external = require(`${hbwgConfig.tempDir}external.js`)
+      logback('An external file has been imported.')
+    }
+  } else {
+    ChildProcess.execSync(`npx uglifyjs ${path} -m -o ${hbwgConfig.tempDir}external.js`, {
+      cwd: __dirname
+    })
+    const hashRefresh = crypto.createHash('sha256')
+    hashRefresh.update(fs.readFileSync(`${hbwgConfig.tempDir}external.js`))
+    hashRefresh.update(fs.readFileSync(path))
+    fs.writeFileSync(`${hbwgConfig.tempDir}.external.hbwg_cahce`, hashRefresh.digest('hex'))
+    hbwgConfig.external = require(`${hbwgConfig.tempDir}external.js`)
+    logback('An external file has been imported.')
+  }
 }
+if (process.env.hbwg_external) LoadExternal(process.env.hbwg_external)
+else if (fs.existsSync('./external.js')) LoadExternal(`${process.cwd()}/external.js`)
 
 if (!ChildProcess.execSync('wget --version').toString().split('\n')[0].includes('GNU Wget')) {
   logerr('Wget not found. Please install it.')
@@ -230,7 +270,7 @@ if (typeof hbwgConfig.external !== 'undefined' && hbwgConfig.external.api) {
 }
 
 // bing source config
-if (typeof hbwgConfig.external !== 'undefined' && typeof hbwgConfig.external.bingsrc.url === 'string') hbwgConfig.apiconfig.bingsrc = String(hbwgConfig.external.bingsrc.url)
+if (typeof hbwgConfig.external !== 'undefined' && hbwgConfig.external.bingsrc && typeof hbwgConfig.external.bingsrc.url === 'string') hbwgConfig.apiconfig.bingsrc = String(hbwgConfig.external.bingsrc.url)
 else hbwgConfig.apiconfig.bingsrc = '/bingsrc'
 
 // robots.txt
@@ -261,16 +301,10 @@ app.get('/', (req, res) => {
   if (headip === undefined) global.ip = req.ip
   else global.ip = headip
   const ip = global.ip
-  if (typeof hbwgConfig.external !== 'undefined') {
-    if (hbwgConfig.external.rootprogram) {
-      logback('Root directory component imported successfully.')
-      hbwgConfig.external.rootprogram(req, res, getback, logback, logerr)
-    } else {
-      res.redirect('https://www.hestudio.net/docs/hestudio_bing_wallpaper_get.html')
-    }
-  } else {
-    res.redirect('https://www.hestudio.net/docs/hestudio_bing_wallpaper_get.html')
-  }
+  if (typeof hbwgConfig.external !== 'undefined' && typeof hbwgConfig.external.rootprogram === 'function') {
+    logback('Root directory component imported successfully.')
+    hbwgConfig.external.rootprogram(req, res, getback, logback, logerr)
+  } else res.redirect('https://www.hestudio.net/docs/hestudio_bing_wallpaper_get.html')
   getback(ip, '/')
 })
 
@@ -280,7 +314,9 @@ if (hbwgConfig.apiconfig.getimage) {
     if (headip === undefined) global.ip = req.ip
     else global.ip = headip
     const ip = global.ip
-    res.sendFile(`${hbwgConfig.tempDir}image.jpg`)
+    // res.sendFile(`${hbwgConfig.tempDir}image.jpg`)
+    res.setHeader('Content-Type', 'image/jpeg')
+    res.send(hbwgConfig.image)
     getback(ip, hbwgConfig.apiconfig.getimage)
   })
 }
@@ -327,19 +363,10 @@ if (hbwgConfig.apiconfig.bingsrc) {
 if (typeof hbwgConfig.external !== 'undefined') {
   if (hbwgConfig.external.debug) {
     logwarn('Debug Mode is enable!')
-    if (!hbwgConfig.external.debug.url) {
-      hbwgConfig.apiconfig.debug = '/debug'
-    } else {
-      try {
-        hbwgConfig.apiconfig.debug = String(hbwgConfig.external.debug.url)
-      } catch (error) {
-        logerr('url option should be string.')
-        process.exit(1)
-      }
-    }
-    if (hbwgConfig.external.debug.passwd) {
-      hbwgConfig.DebugPasswd = hbwgConfig.external.debug.passwd
-    }
+    if (!hbwgConfig.external.debug.url) hbwgConfig.apiconfig.debug = '/debug'
+    else hbwgConfig.apiconfig.debug = String(hbwgConfig.external.debug.url)
+
+    if (hbwgConfig.external.debug.passwd) hbwgConfig.DebugPasswd = hbwgConfig.external.debug.passwd
   }
 }
 
