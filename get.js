@@ -79,37 +79,6 @@ else hbwgConfig.api = hbwgConfig.host + '/HPImageArchive.aspx?format=js&idx=0&n=
 if (process.env.hbwg_header) hbwgConfig.header = process.env.hbwg_header
 else hbwgConfig.header = 'x-real-ip'
 
-/**
- *
- * @param {object} bingsrc
- */
-const download = (bingsrc) => {
-  hbwgConfig.bingsrc = bingsrc
-  const url = hbwgConfig.host + bingsrc.images[0].url
-  ChildProcess.exec(String(`wget -O ${hbwgConfig.tempDir}/image.jpg ${url}`), () => {
-    hbwgConfig.image = fs.readFileSync(`${hbwgConfig.tempDir}/image.jpg`)
-  })
-  hbwgConfig.copyright = String(bingsrc.images[0].copyright)
-  hbwgConfig.copyrightlink = String(bingsrc.images[0].copyrightlink)
-  hbwgConfig.title = String(bingsrc.images[0].title)
-  if (typeof hbwgConfig.external !== 'undefined' && hbwgConfig.external.refreshtask) {
-    logwarn('task is running...')
-    hbwgConfig.external.refreshtask()
-    logwarn('task is finish.')
-  }
-  logback('Refresh Successfully!')
-}
-
-const cacheimg = () => {
-  const requestOptions = {
-    method: 'GET',
-    redirect: 'follow'
-  }
-  fetch(hbwgConfig.api, requestOptions)
-    .then((response) => response.json())
-    .then((result) => download(result))
-}
-
 // 定时
 const rule = new schedule.RecurrenceRule()
 
