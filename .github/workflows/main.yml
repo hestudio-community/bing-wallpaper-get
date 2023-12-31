@@ -35,7 +35,7 @@ jobs:
     - name: Login Docker
       run: docker login --username hestudio --password ${{ secrets.DOCKER_PASSWORD }}
     - run: docker build . --file Dockerfile --tag hestudio/bingwallpaper_get:${{ steps.get_version.outputs.tag }}
-    - run: docker build . --file Dockerfile --tag hestudio/bingwallpaper_get:rc
+    - run: docker build . --file Dockerfile --tag hestudio/bingwallpaper_get
     - run: docker push hestudio/bingwallpaper_get:${{ steps.get_version.outputs.tag }}
     - run: docker push hestudio/bingwallpaper_get
     
