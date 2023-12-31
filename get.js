@@ -1,6 +1,6 @@
 require('dotenv').config()
 
-const VERSION = '1.4.0-beta.3'
+const VERSION = '1.4.0-rc.1'
 
 const express = require('express')
 const schedule = require('node-schedule')
@@ -9,6 +9,8 @@ const fs = require('fs')
 const app = express()
 const dayjs = require('dayjs')
 const crypto = require('node:crypto')
+
+console.log(`[${dayjs().format('YYYY-MM-DD HH:mm:ss')}] heStudio BingWallpaper Get version: ${VERSION}`)
 
 const hbwgConfig = {}
 
@@ -77,37 +79,6 @@ else hbwgConfig.api = hbwgConfig.host + '/HPImageArchive.aspx?format=js&idx=0&n=
 if (process.env.hbwg_header) hbwgConfig.header = process.env.hbwg_header
 else hbwgConfig.header = 'x-real-ip'
 
-/**
- *
- * @param {object} bingsrc
- */
-const download = (bingsrc) => {
-  hbwgConfig.bingsrc = bingsrc
-  const url = hbwgConfig.host + bingsrc.images[0].url
-  ChildProcess.exec(String(`wget -O ${hbwgConfig.tempDir}/image.jpg ${url}`), () => {
-    hbwgConfig.image = fs.readFileSync(`${hbwgConfig.tempDir}/image.jpg`)
-  })
-  hbwgConfig.copyright = String(bingsrc.images[0].copyright)
-  hbwgConfig.copyrightlink = String(bingsrc.images[0].copyrightlink)
-  hbwgConfig.title = String(bingsrc.images[0].title)
-  if (typeof hbwgConfig.external !== 'undefined' && hbwgConfig.external.refreshtask) {
-    logwarn('task is running...')
-    hbwgConfig.external.refreshtask()
-    logwarn('task is finish.')
-  }
-  logback('Refresh Successfully!')
-}
-
-const cacheimg = () => {
-  const requestOptions = {
-    method: 'GET',
-    redirect: 'follow'
-  }
-  fetch(hbwgConfig.api, requestOptions)
-    .then((response) => response.json())
-    .then((result) => download(result))
-}
-
 // 定时
 const rule = new schedule.RecurrenceRule()
 
@@ -131,8 +102,6 @@ module.exports = {
   logwarn,
   hbwgConfig
 }
-
-logback(`heStudio BingWallpaper Get version: ${VERSION}`)
 
 // external.js
 /**
@@ -201,6 +170,42 @@ if (typeof hbwgConfig.external !== 'undefined' && hbwgConfig.external.refreshtim
   rule.minute = 0
   rule.second = 0
   rule.tz = 'Asia/Shanghai'
+}
+
+// refreshtask
+if (typeof hbwgConfig.external !== 'undefined' && hbwgConfig.external.refreshtask) {
+  hbwgConfig.refreshtask = hbwgConfig.external.refreshtask
+}
+
+/**
+ *
+ * @param {object} bingsrc
+ */
+const download = (bingsrc) => {
+  hbwgConfig.bingsrc = bingsrc
+  const url = hbwgConfig.host + bingsrc.images[0].url
+  ChildProcess.exec(String(`wget -O ${hbwgConfig.tempDir}/image.jpg ${url}`), () => {
+    hbwgConfig.image = fs.readFileSync(`${hbwgConfig.tempDir}/image.jpg`)
+  })
+  hbwgConfig.copyright = String(bingsrc.images[0].copyright)
+  hbwgConfig.copyrightlink = String(bingsrc.images[0].copyrightlink)
+  hbwgConfig.title = String(bingsrc.images[0].title)
+  if (typeof hbwgConfig.refreshtask === 'function') {
+    logwarn('task is running...')
+    hbwgConfig.refreshtask()
+    logwarn('task is finish.')
+  }
+  logback('Refresh Successfully!')
+}
+
+const cacheimg = () => {
+  const requestOptions = {
+    method: 'GET',
+    redirect: 'follow'
+  }
+  fetch(hbwgConfig.api, requestOptions)
+    .then((response) => response.json())
+    .then((result) => download(result))
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -292,15 +297,20 @@ if (hbwgConfig.robots !== false) {
   })
 }
 
+if (typeof hbwgConfig.external !== 'undefined' && typeof hbwgConfig.external.rootprogram === 'function') {
+  logback('Root directory component imported successfully.')
+  hbwgConfig.rootprogram = hbwgConfig.external.rootprogram
+}
+
 // 主程序
 app.get('/', (req, res) => {
   const headip = req.headers[hbwgConfig.header]
   if (headip === undefined) global.ip = req.ip
   else global.ip = headip
   const ip = global.ip
-  if (typeof hbwgConfig.external !== 'undefined' && typeof hbwgConfig.external.rootprogram === 'function') {
+  if (typeof hbwgConfig.rootprogram === 'function') {
     logback('Root directory component imported successfully.')
-    hbwgConfig.external.rootprogram(req, res, getback, logback, logerr)
+    hbwgConfig.rootprogram(req, res, getback, logback, logerr)
   } else res.redirect('https://www.hestudio.net/docs/hestudio_bing_wallpaper_get.html')
   getback(ip, '/')
 })
@@ -472,6 +482,9 @@ if (hbwgConfig.apiconfig.debug) {
     }
   })
 }
+
+// delete external cache
+hbwgConfig.external = undefined
 
 app.listen(hbwgConfig.port, () => {
   logback(`heStudio BingWallpaper Get is running on localhost:${hbwgConfig.port}`)
