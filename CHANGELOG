@@ -43,6 +43,8 @@
 3. server.tmp(develop): modify the file path recognition logic, need to allow `/tmp` and `/tmp/` to both exist.
 4. server.tmp(develop): Optimize the loading mechanism of `external.js` files.
 5. debug(develop): password changed to sha256 storage.
+#### 1.4.0-rc.1
+1. server.callback.hbwgconfig: (Security update) Disable viewing of project raw configuration via `hbwgConfig.external`.
 
 ### 1.3.2
 1. (feature)server.header: Allow custom real IP addresses to be passed into the header.
