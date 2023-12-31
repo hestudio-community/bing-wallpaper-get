@@ -4,12 +4,12 @@
 
 This is the Develop version to preview the `v1.4.0` version of the update. The update is detailed at https://storage.hestudio.net/s/LXiX
 
-This is the beta branch, you can monitor updates to this branch at https://registry.npmmirror.com/hestudio-bingwallpaper-get/beta
+This is the rc branch, you can monitor updates to this branch at https://registry.npmmirror.com/hestudio-bingwallpaper-get/rc
 
 We will make the following schedule of updates:
 
 - [x] alpha: Focus on new feature updates.
-- [ ] beta: Focus on performance optimization.
+- [x] beta: Focus on performance optimization.
 - [ ] rc: Focus on adapting to more devices.
 
 
