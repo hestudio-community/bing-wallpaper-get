@@ -1,71 +1,45 @@
+### 1.4.0 [#18](https://github.com/hestudio-community/bing-wallpaper-get/issues/18)
+### Developer Information
+1. **If there is an environment variable type switch, it needs to be moved to `external.js` or it will not load on `v1.4.0` and later.**
+2. **Developers need to manually clean up `/image.jpg` created by previous versions (optional).**
+
+### Security update
+1. server.callback.hbwgconfig: (Security update) Disable viewing of project raw configuration via variable.
+
+### Feature
+1. (feature)server.tmp(develop): Move temporary files to the `/tmp` directory: this directory is automatically cleared and reset after a program restart. The default folder name can be changed via environment variables.
+2. (feature)server.tmp(develop): Cache `external.js` synchronously to `/tmp` before subsequent mounts.
+3. (feature)debug(develop): `/debug` (GET) debugging interface
+4. (feature)source.bingsrc(develop): Returns the result of the original request to the bing server.
+5. (feature)rubots(develop): Add `robots.txt`
+6. (feature)external.refreshtask(develop): Developers can customize some tasks to be performed when the server refreshes resources.
+
+### Bug Fixes
+1. server.getupdate: Change the default notification level from `info` to `warn`.
+2. server.getupdate: Remove compatibility code for environment variable type switches.
+3. server.getupdate: Fix bugs in `getupdate`.
+4. api: Allows to change the URL of the API.
+5. api: Allows to disable the API.
+6. server: Move the program version number loading display to the first place.
+7. server: Check if wget exists on the device.
+8. server.getupdate.packageurl: Updates the package.json source, defaults to getting it from npm instead of Github.
+
 ### 1.3.2
-1. Allow custom real IP addresses to be passed into the header.
-2. Classify global variables as hbwgConfig objects.
-3. Add logwarn built-in function.
-4. (For developers) We switch the default package manager to pnpm in this version, because yarn is not compatible with this project.
+1. (feature)server.header: Allow custom real IP addresses to be passed into the header.
+2. (feature)server.callback.hbwgconfig: Classify global variables as hbwgConfig objects.
+3. (feature)function.logwarn: Add logwarn built-in function.
+4. server: (For developers) We switch the default package manager to pnpm in this version, because yarn is not compatible with this project.
 
 ### 1.3.1
-1. Move the automatic update detection switch to the external.js file.
-2. (Major update) Optimize the code architecture. Directly export the built-in function, and when using it, you need to migrate the code of external.js to the new scheme.We will remove the support of the original code in v1.4.0 version.
-3. Dependency library upgrade.
-4. The resource acquisition mode is changed to fetch api.
-5. Export some configuration information and can be used for development and debugging.
+1. server.getupdate.getupdate: Move the automatic update detection switch to the external.js file.
+2. server: Optimize the code architecture. Directly export the built-in function, and when using it, you need to migrate the code of external.js to the new scheme.We will remove the support of the original code in v1.4.0 version.
+3. server: Dependency library upgrade.
+4. source.callback.bing_source: The resource acquisition mode is changed to fetch api.
+5. server.callback: Export some configuration information and can be used for development and debugging.
 
 ### 1.3.0
-1. Version verification before starting the new program.
-2. Optimize the code.
+1. server.getupdate: Version verification before starting the new program.
+2. server: Optimize the code.
 
-### 1.2.16
-This time a document update is pushed, and this update internationalizes the document.  Other than that, there are no substantial feature updates.
-
-### 1.2.6 - 1.2.15
-There are no updates this time, just some trivial things that have nothing to do with the functionality of the code.
-
-### 1.2.5
-1. Fix build issues
-2. Modify the logerr() interface output form
-
-### 1.2.4
- 1. Project code standardization
- 2. Fixed the issue where external.js cannot be read after being imported into the default location when installed through npm.
- 3. Fixed the problem that the IP address cannot be read and undefined is displayed when anti-generation is not used.
- 4. Provide postback() log interface
- 5. Modify the logerr() interface output form # Not built, will be built in the next version
- 6. Modify the external interface rootprogram()
- 7. Modify the external interface beforestart()
-
-
-### 1.2.3
- 1. Fix the IP display problem during reverse generation
-
-### 1.2.2
- 1. Fix the problem that npm users cannot read images
- 2. Allow port modification through environment variables
- 3. Allow external code to be inserted before the program is run
- 4. Fixed the issue where undefined is displayed when IP is deployed locally.
- 5. Allow custom refresh time
-
-### 1.2.1
- 1. Fix external file calling problem
- 2. Optimize the experience of using npm
-
-### 1.2.0
- 1. Fix the problem of IP address display error
- 2. Open a custom interface to call the host
- 3. Open custom interface parameters
- 4. Define the reaction after calling the root path
-
-### 1.1.6
- 1. Fixed the problem that the log does not display the port
-
-### 1.1.5
- 1. Added time display
-
-### 1.1.4
- 1. Added call log return
-
-### 1.1.1
- 1. Fixed time zone issue causing call delay
-
-### 1.1.0
- 1. Update copyright information and title output
+### < 1.3.0 versions
+Versions prior to 1.3.0 have development flaws and it is recommended to update to 1.3.0 or higher for use.Technical support for previous versions will no longer be available.

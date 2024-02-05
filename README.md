@@ -5,9 +5,9 @@
 For details, see <https://www.hestudio.net/docs/hestudio_bing_wallpaper_get.html>
 
 ### Call method
->
+
 > Run port at `3000`
->
+
 #### Get pictures
 
 ```text
@@ -48,14 +48,14 @@ docker pull hestudio/bingwallpaper_get
 docker run -d -p 3000:3000 hestudio/bingwallpaper_get
 ```
 
-#### Manual installation
+#### Manual installation (Only Develop)
 
 ```sh
 git clone https://github.com/hestudio-community/bing-wallpaper-get.git
 cd bing-wallpaper-get
 npm install --global pnpm
-pnpm install --production
-pnpm server
+pnpm install
+pnpm run server
 ```
 
 > We will use `pnpm` as the package manager after version 1.3.2. If you deploy in this way, please switch in time to avoid any impact.
