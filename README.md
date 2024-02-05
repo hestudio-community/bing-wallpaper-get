@@ -1,18 +1,5 @@
 # heStudio BingWallpaper Get
 
-### Develop Version
-
-This is the Develop version to preview the `v1.4.0` version of the update. The update is detailed at https://storage.hestudio.net/s/LXiX
-
-This is the rc branch, you can monitor updates to this branch at https://registry.npmmirror.com/hestudio-bingwallpaper-get/rc
-
-We will make the following schedule of updates:
-
-- [x] alpha: Focus on new feature updates.
-- [x] beta: Focus on performance optimization.
-- [ ] rc: Focus on adapting to more devices.
-
-
 ### Demo and detailed documentation
 
 For details, see <https://www.hestudio.net/docs/hestudio_bing_wallpaper_get.html>
@@ -61,13 +48,13 @@ docker pull hestudio/bingwallpaper_get
 docker run -d -p 3000:3000 hestudio/bingwallpaper_get
 ```
 
-#### Manual installation
+#### Manual installation (Only Develop)
 
 ```sh
 git clone https://github.com/hestudio-community/bing-wallpaper-get.git
 cd bing-wallpaper-get
 npm install --global pnpm
-pnpm install --production
+pnpm install
 pnpm run server
 ```
 

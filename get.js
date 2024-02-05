@@ -1,6 +1,6 @@
 require('dotenv').config()
 
-const VERSION = '1.4.0-rc.1'
+const VERSION = '1.4.0'
 
 const express = require('express')
 const schedule = require('node-schedule')

@@ -1,50 +1,28 @@
 ### 1.4.0 [#18](https://github.com/hestudio-community/bing-wallpaper-get/issues/18)
-#### 1.4.0-alpha.1
-1. server.getupdate: Change the default notification level from `info` to `warn`.
-2. server.getupdate: Remove compatibility code for environment variable type switches. **If there is an environment variable type switch, it needs to be moved to `external.js` or it will not load on `v1.4.0` and later.**
-#### 1.4.0-alpha.2
-1. (feature)server.tmp(develop): Move temporary files to the `/tmp` directory: this directory is automatically cleared and reset after a program restart. The default folder name can be changed via environment variables.**Developers need to manually clean up `/image.jpg` created by previous versions (optional).**
-#### 1.4.0-alpha.3
-1. (feature)server.tmp(develop): Cache `external.js` synchronously to `/tmp` before subsequent mounts.
-2. server.getupdate: Fix bugs in `getupdate`.
-3. api: Allows to change the URL of the API.
-4. api: Allows to disable the API.
-#### 1.4.0-alpha.4
-1. server.tmp(develop): Fix the bug that `external.js` could not load the built-in export component.
-2. server: Move the program version number loading display to the first place.
+### Developer Information
+1. **If there is an environment variable type switch, it needs to be moved to `external.js` or it will not load on `v1.4.0` and later.**
+2. **Developers need to manually clean up `/image.jpg` created by previous versions (optional).**
+
+### Security update
+1. server.callback.hbwgconfig: (Security update) Disable viewing of project raw configuration via variable.
+
+### Feature
+1. (feature)server.tmp(develop): Move temporary files to the `/tmp` directory: this directory is automatically cleared and reset after a program restart. The default folder name can be changed via environment variables.
+2. (feature)server.tmp(develop): Cache `external.js` synchronously to `/tmp` before subsequent mounts.
 3. (feature)debug(develop): `/debug` (GET) debugging interface
-#### 1.4.0-alpha.5
-1. server.tmp(develop): Allow modification of the cache directory via environment variables.
-2. debug(develop): Provides `warn` level notifications on the console when debug mode is on.
+4. (feature)source.bingsrc(develop): Returns the result of the original request to the bing server.
+5. (feature)rubots(develop): Add `robots.txt`
+6. (feature)external.refreshtask(develop): Developers can customize some tasks to be performed when the server refreshes resources.
+
+### Bug Fixes
+1. server.getupdate: Change the default notification level from `info` to `warn`.
+2. server.getupdate: Remove compatibility code for environment variable type switches.
 3. server.getupdate: Fix bugs in `getupdate`.
-#### 1.4.0-alpha.6
-1. debug(develop): Update Debug Mode
-#### 1.4.0-alpha.7
-1. server.tmp(develop): Fixed the problem that `external.js` could not be loaded normally in npm and docker running modes.
-2. (deprecated)server: Add a fault tolerance mechanism for online requests.
-#### 1.4.0-alpha.8
-1. (feature)source.bingsrc(develop): Returns the result of the original request to the bing server.
-#### 1.4.0-alpha.9
-1. server: Check if wget exists on the device.
-2. (feature)rubots(develop): Add `robots.txt`
-3. (feature)external.refreshtask(develop): Developers can customize some tasks to be performed when the server refreshes resources.
-#### 1.4.0-beta.1
-1. (deprecated)server: Optimize code structure and reduce redundant structures.
-2. api(develop): after renaming one of the api's, the unrenamed api address would report undefined.
-#### 1.4.0-beta.2
-1. source.bingsrc(develop): repair [#29](https://github.com/hestudio-community/bing-wallpaper-get/issues/29)
-2. server: Optimize code structure and reduce redundant structures.
-3. server.tmp(develop): Cache the image into memory to reduce repeated reads to disk.
-4. server.tmp(develop): Optimize the loading mechanism of `external.js` files.
-5. server.tmp(develop): Optimize temp management mechanisms.
-#### 1.4.0-beta.3
-1. server.getupdate.packageurl: Updates the package.json source, defaults to getting it from npm instead of Github.
-2. enternal.refreshtask(develop): Add an end-of-task-run reminder.
-3. server.tmp(develop): modify the file path recognition logic, need to allow `/tmp` and `/tmp/` to both exist.
-4. server.tmp(develop): Optimize the loading mechanism of `external.js` files.
-5. debug(develop): password changed to sha256 storage.
-#### 1.4.0-rc.1
-1. server.callback.hbwgconfig: (Security update) Disable viewing of project raw configuration via `hbwgConfig.external`.
+4. api: Allows to change the URL of the API.
+5. api: Allows to disable the API.
+6. server: Move the program version number loading display to the first place.
+7. server: Check if wget exists on the device.
+8. server.getupdate.packageurl: Updates the package.json source, defaults to getting it from npm instead of Github.
 
 ### 1.3.2
 1. (feature)server.header: Allow custom real IP addresses to be passed into the header.
