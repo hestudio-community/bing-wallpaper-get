@@ -1,6 +1,6 @@
-require('dotenv').config()
 
-const VERSION = '1.4.0'
+require('dotenv').config()
+const VERSION = '1.4.1'
 
 const express = require('express')
 const schedule = require('node-schedule')
@@ -142,7 +142,7 @@ if (!ChildProcess.execSync('wget --version').toString().split('\n')[0].includes(
 }
 
 // 1.3.0 Version update prompt
-if (typeof hbwgConfig.external !== 'undefined' && hbwgConfig.external.getupdate === false) hbwgConfig.getupdate = false
+if (typeof hbwgConfig.external === 'object' && hbwgConfig.external.getupdate === false) hbwgConfig.getupdate = false
 else hbwgConfig.getupdate = true
 
 if (process.env.hbwg_packageurl) hbwgConfig.packageurl = process.env.hbwg_packageurl
@@ -162,7 +162,7 @@ if (hbwgConfig.getupdate !== false) {
     .then((result) => AfterGetVersion(result))
 }
 
-if (typeof hbwgConfig.external !== 'undefined' && hbwgConfig.external.refreshtime) {
+if (typeof hbwgConfig.external === 'object' && hbwgConfig.external.refreshtime) {
   logback('Timer configuration imported.')
   hbwgConfig.external.refreshtime(rule)
 } else {
@@ -173,7 +173,7 @@ if (typeof hbwgConfig.external !== 'undefined' && hbwgConfig.external.refreshtim
 }
 
 // refreshtask
-if (typeof hbwgConfig.external !== 'undefined' && hbwgConfig.external.refreshtask) {
+if (typeof hbwgConfig.external === 'object' && hbwgConfig.external.refreshtask) {
   hbwgConfig.refreshtask = hbwgConfig.external.refreshtask
 }
 
@@ -237,7 +237,7 @@ const job = schedule.scheduleJob(rule, function () {
 cacheimg()
 
 // Load configuration file
-if (typeof hbwgConfig.external !== 'undefined' && hbwgConfig.external.beforestart) {
+if (typeof hbwgConfig.external === 'object' && hbwgConfig.external.beforestart) {
   logback('Initialization configuration has been imported.')
   hbwgConfig.external.beforestart(app, getback, postback, logback, logerr)
 }
@@ -252,30 +252,40 @@ hbwgConfig.apiconfig = {
 }
 
 // api configuration
-if (typeof hbwgConfig.external !== 'undefined' && hbwgConfig.external.api) {
+if (typeof hbwgConfig.external === 'object' && typeof hbwgConfig.external.api === 'object') {
   logback('The api configuration has been loaded.')
   // rename
-  if (typeof hbwgConfig.external.api.rename.getimage === 'string') hbwgConfig.apiconfig.getimage = String(hbwgConfig.external.api.rename.getimage)
-  if (typeof hbwgConfig.external.api.rename.gettitle === 'string') hbwgConfig.apiconfig.gettitle = String(hbwgConfig.external.api.rename.gettitle)
-  if (typeof hbwgConfig.external.api.rename.getcopyright === 'string') hbwgConfig.apiconfig.getcopyright = String(hbwgConfig.external.api.rename.getcopyright)
+  if (typeof hbwgConfig.external.api.rename === 'object') {
+    if (typeof hbwgConfig.external.api.rename.getimage === 'string') hbwgConfig.apiconfig.getimage = String(hbwgConfig.external.api.rename.getimage)
+    if (typeof hbwgConfig.external.api.rename.gettitle === 'string') hbwgConfig.apiconfig.gettitle = String(hbwgConfig.external.api.rename.gettitle)
+    if (typeof hbwgConfig.external.api.rename.getcopyright === 'string') hbwgConfig.apiconfig.getcopyright = String(hbwgConfig.external.api.rename.getcopyright)
+  }
   // ban
   if (Array.isArray(hbwgConfig.external.api.ban)) {
     for (let i = 0; i < hbwgConfig.external.api.ban.length; i++) {
-      if (hbwgConfig.external.api.ban[i] === 'getimage') hbwgConfig.apiconfig.getimage = false
-      if (hbwgConfig.external.api.ban[i] === 'gettitle') hbwgConfig.apiconfig.gettitle = false
-      if (hbwgConfig.external.api.ban[i] === 'getcopyright') hbwgConfig.apiconfig.getcopyright = false
+      switch (hbwgConfig.external.api.ban[i]) {
+        case 'getimage':
+          hbwgConfig.apiconfig.getimage = false
+          break
+        case 'gettitle':
+          hbwgConfig.apiconfig.gettitle = false
+          break
+        case 'getcopyright':
+          hbwgConfig.apiconfig.getcopyright = false
+          break
+      }
     }
   }
 }
 
 // bing source config
-if (typeof hbwgConfig.external !== 'undefined' && hbwgConfig.external.bingsrc) {
+if (typeof hbwgConfig.external === 'object' && hbwgConfig.external.bingsrc) {
   if (typeof hbwgConfig.external.bingsrc.url === 'string') hbwgConfig.apiconfig.bingsrc = String(hbwgConfig.external.bingsrc.url)
   else hbwgConfig.apiconfig.bingsrc = '/bingsrc'
 } else hbwgConfig.apiconfig.bingsrc = false
 
 // robots.txt
-if (typeof hbwgConfig.external !== 'undefined') {
+if (typeof hbwgConfig.external === 'object') {
   if (hbwgConfig.external.robots === false) hbwgConfig.robots = false
   else if (typeof hbwgConfig.external.robots === 'string') hbwgConfig.robots = String(hbwgConfig.external.robots)
 }
@@ -297,7 +307,7 @@ if (hbwgConfig.robots !== false) {
   })
 }
 
-if (typeof hbwgConfig.external !== 'undefined' && typeof hbwgConfig.external.rootprogram === 'function') {
+if (typeof hbwgConfig.external === 'object' && typeof hbwgConfig.external.rootprogram === 'function') {
   logback('Root directory component imported successfully.')
   hbwgConfig.rootprogram = hbwgConfig.external.rootprogram
 }
@@ -367,7 +377,7 @@ if (hbwgConfig.apiconfig.bingsrc) {
 }
 
 // debug
-if (typeof hbwgConfig.external !== 'undefined') {
+if (typeof hbwgConfig.external === 'object') {
   if (hbwgConfig.external.debug) {
     logwarn('Debug Mode is enable!')
     if (!hbwgConfig.external.debug.url) hbwgConfig.apiconfig.debug = '/debug'
