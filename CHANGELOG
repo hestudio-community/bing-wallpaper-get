@@ -7,7 +7,7 @@
 3. (feature)server.tmp(develop): Cache `external.js` synchronously to `/tmp` before subsequent mounts.
 4. (feature)debug(develop): `/debug` (GET) debugging interface
 5. (feature)source.bingsrc(develop): Returns the result of the original request to the bing server.
-6. (feature)rubots(develop): Add `robots.txt`
+6. (feature)robots(develop): Add `robots.txt`
 7. (feature)external.refreshtask(develop): Developers can customize some tasks to be performed when the server refreshes resources.
 8. server.getupdate: Change the default notification level from `info` to `warn`.
 9. server.getupdate: Remove compatibility code for environment variable type switches.
