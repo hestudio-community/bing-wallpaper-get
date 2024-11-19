@@ -1,4 +1,4 @@
-FROM node:lts
+FROM node:22-alpine
 ENV APP_HOME /app
 WORKDIR $APP_HOME
 RUN npm install hestudio-bingwallpaper-get

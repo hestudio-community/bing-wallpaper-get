@@ -1,3 +1,10 @@
+### 1.4.2 
+1. server: Support Nodejs 22 LTS version.
+2. server(docker): Use optimized docker build sources to reduce image size.
+3. server.header: Changed the default header used to identify IP addresses to `x-forwarded-for`, and optimized the fallback scheme when the specified header does not exist.
+4. api.ip: Optimize IP address loading logic.
+5. debug: Allow to use both `GET` and `POST` to get Debug Information.
+
 ### 1.4.1
 1. api: Fix an issue that reported an error if `ban` was turned on without `rename`.
 
