@@ -438,7 +438,11 @@ if (typeof hbwgConfig.external === "object") {
         hbwgConfig.apiconfig.debug.method = "POST";
       else if (hbwgConfig.external.debug.method === "GET")
         hbwgConfig.apiconfig.debug.method = "GET";
-      else hbwgConfig.apiconfig.debug.method = "GET";
+      else if (!hbwgConfig.external.debug.method) hbwgConfig.apiconfig.debug.method = "GET";
+      else {
+        logerr("Debug method is wrong! Can only be POST or GET.");
+        process.exit(1);
+      }
     }
   }
 }
