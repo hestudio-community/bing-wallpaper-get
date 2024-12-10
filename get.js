@@ -1,5 +1,5 @@
 require("dotenv").config();
-const VERSION = "1.4.2";
+const VERSION = "1.4.3";
 
 const express = require("express");
 const schedule = require("node-schedule");
@@ -427,21 +427,30 @@ if (typeof hbwgConfig.external === "object") {
       hbwgConfig.apiconfig.debug.url = "/debug";
     else hbwgConfig.apiconfig.debug.url = String(hbwgConfig.external.debug.url);
 
-    if (hbwgConfig.external.debug.passwd) {
-      const hash = crypto.createHash("sha256");
-      hash.update(hbwgConfig.external.debug.passwd);
-      hbwgConfig.DebugPasswd = hash.digest("hex");
-    }
-
     if (hbwgConfig.external.debug.method) {
       if (hbwgConfig.external.debug.method === "POST")
         hbwgConfig.apiconfig.debug.method = "POST";
       else if (hbwgConfig.external.debug.method === "GET")
         hbwgConfig.apiconfig.debug.method = "GET";
-      else if (!hbwgConfig.external.debug.method) hbwgConfig.apiconfig.debug.method = "GET";
       else {
         logerr("Debug method is wrong! Can only be POST or GET.");
         process.exit(1);
+      }
+    } else hbwgConfig.apiconfig.debug.method = "GET";
+
+    if (hbwgConfig.external.debug.passwd) {
+      if (hbwgConfig.apiconfig.debug.method === "GET") {
+        logerr(
+          "Passwords are not allowed in GET mode, please use POST instead."
+        );
+        process.exit(1);
+      } else {
+        const hash = crypto.createHash("sha256");
+        hash.update(hbwgConfig.external.debug.passwd);
+        hash.update(VERSION);
+        hash.update(process.pid);
+        hash.update(__dirname);
+        hbwgConfig.DebugPasswd = hash.digest("hex");
       }
     }
   }
@@ -532,6 +541,9 @@ if (hbwgConfig.apiconfig.debug.url) {
         const passwd = req.body.passwd;
         if (typeof passwd === "undefined") hash.update("");
         else hash.update(passwd);
+        hash.update(VERSION);
+        hash.update(process.pid);
+        hash.update(__dirname);
         if (hash.digest("hex") == hbwgConfig.DebugPasswd) {
           postback(ip, `${hbwgConfig.apiconfig.debug.url}?passwd=***`);
           ShowDebug();
@@ -553,24 +565,8 @@ if (hbwgConfig.apiconfig.debug.url) {
         res.setHeader("Content-Type", "text/html");
         res.send(GetDebugInfo());
       };
-      if (hbwgConfig.DebugPasswd) {
-        const hash = crypto.createHash("sha256");
-        const passwd = req.query.passwd;
-        if (typeof passwd === "undefined") hash.update("");
-        else hash.update(passwd);
-        if (hash.digest("hex") == hbwgConfig.DebugPasswd) {
-          getback(ip, `${hbwgConfig.apiconfig.debug.url}?passwd=***`);
-          ShowDebug();
-        } else {
-          getback(ip, `${hbwgConfig.apiconfig.debug.url}?passwd=***`);
-          logwarn("Password is wrong!");
-          res.setHeader("Content-Type", "text/html");
-          res.status(403).send('<script>alert("Password is wrong!")</script>');
-        }
-      } else {
-        getback(ip, `${hbwgConfig.apiconfig.debug.url}`);
-        ShowDebug();
-      }
+      getback(ip, `${hbwgConfig.apiconfig.debug.url}`);
+      ShowDebug();
     });
   }
 }
