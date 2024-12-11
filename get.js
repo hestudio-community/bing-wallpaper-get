@@ -448,7 +448,7 @@ if (typeof hbwgConfig.external === "object") {
         const hash = crypto.createHash("sha256");
         hash.update(hbwgConfig.external.debug.passwd);
         hash.update(VERSION);
-        hash.update(process.pid);
+        hash.update(String(process.pid));
         hash.update(__dirname);
         hbwgConfig.DebugPasswd = hash.digest("hex");
       }
@@ -542,7 +542,7 @@ if (hbwgConfig.apiconfig.debug.url) {
         if (typeof passwd === "undefined") hash.update("");
         else hash.update(passwd);
         hash.update(VERSION);
-        hash.update(process.pid);
+        hash.update(String(process.pid));
         hash.update(__dirname);
         if (hash.digest("hex") == hbwgConfig.DebugPasswd) {
           postback(ip, `${hbwgConfig.apiconfig.debug.url}?passwd=***`);
