@@ -1,5 +1,5 @@
 require("dotenv").config();
-const VERSION = "1.4.3";
+const VERSION = "1.4.4";
 
 const express = require("express");
 const schedule = require("node-schedule");
@@ -31,7 +31,7 @@ if (!fs.existsSync(hbwgConfig.tempDir)) {
     !fs.existsSync(`${hbwgConfig.tempDir}/.version.hbwg_cache`) ||
     fs.readFileSync(`${hbwgConfig.tempDir}/.version.hbwg_cache`) != VERSION
   ) {
-    ChildProcess.execSync(`rm ${hbwgConfig.tempDir}/ -rf`);
+    fs.rmSync(hbwgConfig.tempDir, { recursive: true, force: true });
     fs.mkdirSync(hbwgConfig.tempDir);
     fs.writeFileSync(`${hbwgConfig.tempDir}/.version.hbwg_cache`, VERSION);
   }

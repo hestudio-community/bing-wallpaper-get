@@ -1,3 +1,6 @@
+### 1.4.4
+1. server.getupdate: Fix delete `tmp` dir failed when use win32 platform.
+
 ### 1.4.3
 1. server: Upgraded dependency library to fix CVE-2024-45296.
 2. debug: Enhanced password hash validation.
