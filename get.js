@@ -31,17 +31,7 @@ if (!fs.existsSync(hbwgConfig.tempDir)) {
     !fs.existsSync(`${hbwgConfig.tempDir}/.version.hbwg_cache`) ||
     fs.readFileSync(`${hbwgConfig.tempDir}/.version.hbwg_cache`) != VERSION
   ) {
-    try {
-      fs.rmSync(hbwgConfig.tempDir, { recursive: true, force: true });
-      logback("Temporary directory deleted successfully");
-    } catch (err) {
-      logerr(
-        `Temporary directory deletion failed: ${
-          err.code === "ENOTEMPTY" ? "The directory is not empty" : err.message
-        }`
-      );
-      process.exit(1);
-    }
+    fs.rmSync(hbwgConfig.tempDir, { recursive: true, force: true });
     fs.mkdirSync(hbwgConfig.tempDir);
     fs.writeFileSync(`${hbwgConfig.tempDir}/.version.hbwg_cache`, VERSION);
   }
