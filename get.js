@@ -33,11 +33,11 @@ if (!fs.existsSync(hbwgConfig.tempDir)) {
   ) {
     try {
       fs.rmSync(hbwgConfig.tempDir, { recursive: true, force: true });
-      logback("临时目录删除成功");
+      logback("Temporary directory deleted successfully");
     } catch (err) {
       logerr(
-        `临时目录删除失败: ${
-          err.code === "ENOTEMPTY" ? "目录不为空" : err.message
+        `Temporary directory deletion failed: ${
+          err.code === "ENOTEMPTY" ? "The directory is not empty" : err.message
         }`
       );
       process.exit(1);
