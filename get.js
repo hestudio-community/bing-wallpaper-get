@@ -18,11 +18,9 @@ console.log(
 
 const hbwgConfig = {};
 
-// hbwg_tempdir
 if (process.env.hbwg_tempdir) hbwgConfig.tempDir = process.env.hbwg_tempdir;
 else hbwgConfig.tempDir = `${process.cwd()}/tmp`;
 
-// check tempdir
 if (!fs.existsSync(hbwgConfig.tempDir)) {
   fs.mkdirSync(hbwgConfig.tempDir);
   fs.writeFileSync(`${hbwgConfig.tempDir}/.version.hbwg_cache`, VERSION);
@@ -74,15 +72,12 @@ const logerr = (err) =>
 const logwarn = (warn) =>
   console.warn(`[${dayjs().format("YYYY-MM-DD HH:mm:ss")}] WARN: ${warn}`);
 
-// hbwg_port
 if (process.env.hbwg_port) hbwgConfig.port = Number(process.env.hbwg_port);
 else hbwgConfig.port = 3000;
 
-// hbwg_host
 if (process.env.hbwg_host) hbwgConfig.host = process.env.hbwg_host;
 else hbwgConfig.host = "https://cn.bing.com";
 
-// hbwg_config
 if (process.env.hbwg_config)
   hbwgConfig.api =
     hbwgConfig.host + "/HPImageArchive.aspx?" + process.env.hbwg_config;
@@ -90,14 +85,11 @@ else
   hbwgConfig.api =
     hbwgConfig.host + "/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN";
 
-// hbwg_header
 if (process.env.hbwg_header) hbwgConfig.header = process.env.hbwg_header;
 else hbwgConfig.header = "x-forwarded-for";
 
-// 定时
 const rule = new schedule.RecurrenceRule();
 
-// 允许跨域
 app.all("*", function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
@@ -110,11 +102,9 @@ app.all("*", function (req, res, next) {
   else next();
 });
 
-// allow read message from post
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// Derived function
 module.exports = {
   getback,
   postback,
@@ -167,7 +157,6 @@ if (process.env.hbwg_external) LoadExternal(process.env.hbwg_external);
 else if (fs.existsSync("./external.js"))
   LoadExternal(`${process.cwd()}/external.js`);
 
-// 1.3.0 Version update prompt
 if (
   typeof hbwgConfig.external === "object" &&
   hbwgConfig.external.getupdate === false
@@ -209,7 +198,6 @@ if (
   rule.tz = "Asia/Shanghai";
 }
 
-// refreshtask
 if (
   typeof hbwgConfig.external === "object" &&
   hbwgConfig.external.refreshtask
@@ -217,63 +205,77 @@ if (
   hbwgConfig.refreshtask = hbwgConfig.external.refreshtask;
 }
 
-const cacheimg = async () => {
-  /**
-   *
-   * @param {object} bingsrc
-   */
-  const download = async (bingsrc) => {
-    hbwgConfig.bingsrc = bingsrc;
-    const url = hbwgConfig.host + bingsrc.images[0].url;
-    await fetch(url, {
-      method: "GET",
-    }).then(async (response) => {
-      await response.arrayBuffer().then(async (buffer) => {
-        await (hbwgConfig.image = Buffer.from(buffer));
+async function fetchWithRetry(url, options, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, {
+        ...options,
+        timeout: 10000,
       });
-    });
-    hbwgConfig.copyright = String(bingsrc.images[0].copyright);
-    hbwgConfig.copyrightlink = String(bingsrc.images[0].copyrightlink);
-    hbwgConfig.title = String(bingsrc.images[0].title);
-    if (typeof hbwgConfig.refreshtask === "function") {
-      logwarn("task is running...");
-      hbwgConfig.refreshtask();
-      logwarn("task is finish.");
+      return response;
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      console.warn(`请求失败，正在重试 (${i + 1}/${retries})`);
+      await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
     }
-    await logback("Refresh Successfully!");
-  };
-  const requestOptions = {
-    method: "GET",
-    redirect: "follow",
-  };
-  await fetch(hbwgConfig.api, requestOptions)
-    .then((response) => response.json())
-    .then((result) => download(result));
-};
+  }
+}
 
-// eslint-disable-next-line no-unused-vars
-const job = schedule.scheduleJob(rule, async function () {
-  if (hbwgConfig.getupdate !== false) {
-    const requestOptions = {
+const cacheimg = async () => {
+  try {
+    const response = await fetchWithRetry(hbwgConfig.api, {
       method: "GET",
       redirect: "follow",
-    };
-    function AfterGetVersion(src) {
-      hbwgConfig.version = src.version;
-      if (hbwgConfig.version !== VERSION) {
-        logwarn(`New Version! ${hbwgConfig.version} is ready.`);
-      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    fetch(hbwgConfig.packageurl, requestOptions)
-      .then((response) => response.json())
-      .then((result) => AfterGetVersion(result));
+
+    const result = await response.json();
+    await download(result);
+  } catch (error) {
+    console.error(`缓存图片失败: ${error.message}`);
   }
-  cacheimg();
+};
+
+async function checkVersion() {
+  try {
+    const response = await fetch(hbwgConfig.packageurl, {
+      method: "GET",
+      redirect: "follow",
+      timeout: 10000,
+      retry: 3,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    hbwgConfig.version = result.version;
+
+    if (hbwgConfig.version !== VERSION) {
+      logwarn(`New Version! ${hbwgConfig.version} is ready.`);
+    }
+  } catch (error) {
+    console.error(`版本检查失败: ${error.message}`);
+  }
+}
+
+const job = schedule.scheduleJob(rule, async function () {
+  try {
+    if (hbwgConfig.getupdate !== false) {
+      await checkVersion();
+    }
+    await cacheimg();
+  } catch (error) {
+    console.error(`定时任务执行失败: ${error.message}`);
+  }
 });
 
 cacheimg();
 
-// Load configuration file
 if (
   typeof hbwgConfig.external === "object" &&
   hbwgConfig.external.beforestart
@@ -282,7 +284,6 @@ if (
   hbwgConfig.external.beforestart(app, getback, postback, logback, logerr);
 }
 
-// api default configuration
 hbwgConfig.apiconfig = {
   getimage: "/getimage",
   gettitle: "/gettitle",
@@ -291,7 +292,6 @@ hbwgConfig.apiconfig = {
   bingsrc: false,
 };
 
-// api configuration
 if (
   typeof hbwgConfig.external === "object" &&
   typeof hbwgConfig.external.api === "object"
@@ -330,14 +330,12 @@ if (
   }
 }
 
-// bing source config
 if (typeof hbwgConfig.external === "object" && hbwgConfig.external.bingsrc) {
   if (typeof hbwgConfig.external.bingsrc.url === "string")
     hbwgConfig.apiconfig.bingsrc = String(hbwgConfig.external.bingsrc.url);
   else hbwgConfig.apiconfig.bingsrc = "/bingsrc";
 } else hbwgConfig.apiconfig.bingsrc = false;
 
-// robots.txt
 if (typeof hbwgConfig.external === "object") {
   if (hbwgConfig.external.robots === false) hbwgConfig.robots = false;
   else if (typeof hbwgConfig.external.robots === "string")
@@ -368,7 +366,6 @@ if (
   hbwgConfig.rootprogram = hbwgConfig.external.rootprogram;
 }
 
-// 主程序
 app.get("/", (req, res) => {
   const ip = req.headers[hbwgConfig.header] || req.connection.remoteAddress;
   if (typeof hbwgConfig.rootprogram === "function") {
@@ -418,7 +415,6 @@ if (hbwgConfig.apiconfig.bingsrc) {
   });
 }
 
-// debug
 if (typeof hbwgConfig.external === "object") {
   if (hbwgConfig.external.debug) {
     logwarn("Debug Mode is enable!");
@@ -457,78 +453,15 @@ if (typeof hbwgConfig.external === "object") {
 }
 
 if (hbwgConfig.apiconfig.debug.url) {
-  function GetDebugInfo() {
-    return `
-<!DOCTYPE html>
-<html>
+  const GetDebugInfo = () => {
+    try {
+      return `<!DOCTYPE html><html><head><title>调试信息</title></head><body>${generateDebugContent()}</body></html>`;
+    } catch (error) {
+      console.error(`生成调试信息失败: ${error.message}`);
+      return `<!DOCTYPE html><html><head><title>错误</title></head><body><h1>生成调试信息时出错</h1><p>${error.message}</p></body></html>`;
+    }
+  };
 
-<head>
-  <title>Debug - heStudio BingWallpaper Get</title>
-</head>
-
-<body>
-  <h1>Debug Information</h1>
-  <div>
-    <div>
-      <h3>API URL Configurations</h3>
-      <div>
-        <p>getimage: ${hbwgConfig.apiconfig.getimage}</p>
-        <p>gettitle: ${hbwgConfig.apiconfig.gettitle}</p>
-        <p>getcopyright: ${hbwgConfig.apiconfig.getcopyright}</p>
-        <p>bingsrc: ${hbwgConfig.apiconfig.bingsrc}</p>
-      </div>
-    </div>
-    <div>
-      <h3>Source</h3>
-      <div>
-        <h4>Configurations</h4>
-        <div>
-          <p>Bing API: ${hbwgConfig.api}</p>
-        </div>
-        <h4>From Bing</h4>
-        <div>
-          <p>Title: ${hbwgConfig.title}</p>
-          <p>Copyright: ${hbwgConfig.copyright}</p>
-          <p>Copyright Link: ${hbwgConfig.copyrightlink}</p>
-          <p>Bing Source: ${JSON.stringify(hbwgConfig.bingsrc)}</p>
-        </div>
-      </div>
-    </div>
-    <div>
-      <h3>Server Configurations</h3>
-      <div>
-        <p>Port: ${hbwgConfig.port}</p>
-        <p>isGetUpdate: ${hbwgConfig.getupdate}</p>
-        <p>Update PackageUrl: ${hbwgConfig.packageurl}</p>
-        <p>Request header for getting IP: ${hbwgConfig.header}</p>
-        <p>Temp Dir: ${hbwgConfig.tempDir}</p>
-        <p>robots.txt: ${hbwgConfig.robots}</p>
-      </div>
-    </div>
-    <div>
-      <h3>For Developer</h3>
-      <div>
-        <p>TZ: ${process.env.TZ}</p>
-        <p>Program Version: ${VERSION}</p>
-        <p>Latest Version: ${hbwgConfig.version}</p>
-        <p>Running Dir: ${process.cwd()}</p>
-        <p>Core Dir: ${__dirname}</p>
-        <p>Temp Dir: ${hbwgConfig.tempDir}</p>
-        <p>Node Version: ${process.version}</p>
-        <p>Node Dir: ${process.execPath}
-        <p>Arch Information: ${process.arch}</p>
-        <p>Platform Information: ${process.platform}</p>
-        <p>PID: ${process.pid}</p>
-        <p>Memory Usage: ${process.memoryUsage().rss / 1048576} MB</p>
-        <p>Resource Usage ${JSON.stringify(process.resourceUsage())}</p>
-      </div>
-    </div>
-  </div>
-</body>
-
-</html>
-      `;
-  }
   if (hbwgConfig.apiconfig.debug.method === "POST") {
     app.post(hbwgConfig.apiconfig.debug.url, (req, res) => {
       const ip = req.headers[hbwgConfig.header] || req.connection.remoteAddress;
@@ -561,21 +494,74 @@ if (hbwgConfig.apiconfig.debug.url) {
   } else if (hbwgConfig.apiconfig.debug.method === "GET") {
     app.get(hbwgConfig.apiconfig.debug.url, (req, res) => {
       const ip = req.headers[hbwgConfig.header] || req.connection.remoteAddress;
-      const ShowDebug = () => {
+      try {
+        getback(ip, `${hbwgConfig.apiconfig.debug.url}`);
         res.setHeader("Content-Type", "text/html");
         res.send(GetDebugInfo());
-      };
-      getback(ip, `${hbwgConfig.apiconfig.debug.url}`);
-      ShowDebug();
+      } catch (error) {
+        console.error(`处理调试请求失败: ${error.message}`);
+        res.status(500).send(`<h1>服务器错误</h1><p>${error.message}</p>`);
+      }
     });
   }
 }
 
-// delete external cache
 hbwgConfig.external = undefined;
 
-app.listen(hbwgConfig.port, () => {
-  logback(
-    `heStudio BingWallpaper Get is running on localhost:${hbwgConfig.port}`
-  );
-});
+const initApiConfig = () => {
+  try {
+    hbwgConfig.apiconfig = {
+      getimage: "/getimage",
+      gettitle: "/gettitle",
+      getcopyright: "/getcopyright",
+      debug: false,
+      bingsrc: false,
+      timeout: 10000,
+      retries: 3,
+    };
+
+    if (typeof hbwgConfig.external?.api === "object") {
+      logback("正在加载API配置...");
+
+      if (typeof hbwgConfig.external.api.rename === "object") {
+        const { rename } = hbwgConfig.external.api;
+        Object.keys(rename).forEach((key) => {
+          if (typeof rename[key] === "string" && hbwgConfig.apiconfig[key]) {
+            hbwgConfig.apiconfig[key] = rename[key];
+          }
+        });
+      }
+
+      hbwgConfig.apiconfig = {
+        ...hbwgConfig.apiconfig,
+        ...hbwgConfig.external.api,
+      };
+
+      logback("API配置加载完成");
+    }
+  } catch (error) {
+    console.error(`API配置初始化失败: ${error.message}`);
+  }
+};
+
+const init = async () => {
+  try {
+    initApiConfig();
+
+    if (typeof hbwgConfig.external?.beforestart === "function") {
+      await Promise.resolve(
+        hbwgConfig.external.beforestart(app, getback, postback, logback, logerr)
+      ).catch((error) => {
+        console.error(`beforestart 钩子执行失败: ${error.message}`);
+      });
+    }
+
+    app.listen(hbwgConfig.port, () => {
+      logback(`服务器运行在 localhost:${hbwgConfig.port}`);
+    });
+  } catch (error) {
+    console.error(`初始化失败: ${error.message}`);
+  }
+};
+
+init();
