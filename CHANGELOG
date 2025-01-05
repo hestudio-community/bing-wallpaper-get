@@ -1,3 +1,11 @@
+### 1.4.5
+1. external.refreshtask: Fix an issue where scheduled tasks have stopped running even though they haven't finished running yet.
+2. server.getupdate: Optimize the error-throwing mechanism when checking for updates.
+3. server: Upgraded dependency library.
+4. server: Modify code structure to optimize startup progress properly.
+5. external.refreshtask: Optimize the error-throwing mechanism when running scheduled tasks.
+6. server: Optimize the error-throwing mechanism of the listening service.
+
 ### 1.4.4
 1. server.getupdate: Fix delete `tmp` dir failed when use win32 platform.
 
