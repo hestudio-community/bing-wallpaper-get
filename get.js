@@ -1,11 +1,10 @@
 require("dotenv").config();
-const VERSION = "1.4.4";
+const VERSION = "1.4.5";
 
 const express = require("express");
 const schedule = require("node-schedule");
 const ChildProcess = require("child_process");
 const fs = require("fs");
-const app = express();
 const dayjs = require("dayjs");
 const crypto = require("node:crypto");
 const bodyParser = require("body-parser");
@@ -97,23 +96,6 @@ else hbwgConfig.header = "x-forwarded-for";
 // 定时
 const rule = new schedule.RecurrenceRule();
 
-// 允许跨域
-app.all("*", function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Content-Type,Content-Length, Authorization, Accept,X-Requested-With"
-  );
-  res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Credentials", "true");
-  if (req.method === "OPTIONS") res.send(200);
-  else next();
-});
-
-// allow read message from post
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-
 // Derived function
 module.exports = {
   getback,
@@ -181,21 +163,6 @@ else
   hbwgConfig.packageurl =
     "https://registry.npmjs.com/hestudio-bingwallpaper-get/latest";
 
-if (hbwgConfig.getupdate !== false) {
-  const requestOptions = {
-    method: "GET",
-    redirect: "follow",
-  };
-  function AfterGetVersion(src) {
-    hbwgConfig.version = src.version;
-    if (hbwgConfig.version !== VERSION)
-      logwarn(`New Version! ${hbwgConfig.version} is ready.`);
-  }
-  fetch(hbwgConfig.packageurl, requestOptions)
-    .then((response) => response.json())
-    .then((result) => AfterGetVersion(result));
-}
-
 if (
   typeof hbwgConfig.external === "object" &&
   hbwgConfig.external.refreshtime
@@ -217,42 +184,16 @@ if (
   hbwgConfig.refreshtask = hbwgConfig.external.refreshtask;
 }
 
-const cacheimg = async () => {
-  /**
-   *
-   * @param {object} bingsrc
-   */
-  const download = async (bingsrc) => {
-    hbwgConfig.bingsrc = bingsrc;
-    const url = hbwgConfig.host + bingsrc.images[0].url;
-    await fetch(url, {
-      method: "GET",
-    }).then(async (response) => {
-      await response.arrayBuffer().then(async (buffer) => {
-        await (hbwgConfig.image = Buffer.from(buffer));
-      });
-    });
-    hbwgConfig.copyright = String(bingsrc.images[0].copyright);
-    hbwgConfig.copyrightlink = String(bingsrc.images[0].copyrightlink);
-    hbwgConfig.title = String(bingsrc.images[0].title);
-    if (typeof hbwgConfig.refreshtask === "function") {
+function cacheimg() {
+  if (typeof hbwgConfig.refreshtask === "function") {
+    try {
       logwarn("task is running...");
       hbwgConfig.refreshtask();
       logwarn("task is finish.");
+    } catch (e) {
+      logerr(`refreshtask: ${e}`);
     }
-    await logback("Refresh Successfully!");
-  };
-  const requestOptions = {
-    method: "GET",
-    redirect: "follow",
-  };
-  await fetch(hbwgConfig.api, requestOptions)
-    .then((response) => response.json())
-    .then((result) => download(result));
-};
-
-// eslint-disable-next-line no-unused-vars
-const job = schedule.scheduleJob(rule, async function () {
+  }
   if (hbwgConfig.getupdate !== false) {
     const requestOptions = {
       method: "GET",
@@ -260,27 +201,46 @@ const job = schedule.scheduleJob(rule, async function () {
     };
     function AfterGetVersion(src) {
       hbwgConfig.version = src.version;
-      if (hbwgConfig.version !== VERSION) {
+      if (hbwgConfig.version !== VERSION)
         logwarn(`New Version! ${hbwgConfig.version} is ready.`);
-      }
     }
     fetch(hbwgConfig.packageurl, requestOptions)
       .then((response) => response.json())
-      .then((result) => AfterGetVersion(result));
+      .then((result) => AfterGetVersion(result))
+      .catch((error) => logerr(`getupdate: ${error}`));
   }
-  cacheimg();
-});
+  fetch(hbwgConfig.api, {
+    method: "GET",
+    redirect: "follow",
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      hbwgConfig.bingsrc = result;
+      const url = hbwgConfig.host + result.images[0].url;
+      fetch(url, {
+        method: "GET",
+      })
+        .then((response) => {
+          response.arrayBuffer().then(async (buffer) => {
+            await (hbwgConfig.image = Buffer.from(buffer));
+          });
+        })
+        .catch((error) => logerr(`api.getimage: ${error}`));
+      hbwgConfig.copyright = String(result.images[0].copyright);
+      hbwgConfig.copyrightlink = String(result.images[0].copyrightlink);
+      hbwgConfig.title = String(result.images[0].title);
+    })
+    .catch((error) => logerr(`source.bingsrc: ${error}`));
+
+  logback("Refresh Successfully!");
+}
 
 cacheimg();
 
-// Load configuration file
-if (
-  typeof hbwgConfig.external === "object" &&
-  hbwgConfig.external.beforestart
-) {
-  logback("Initialization configuration has been imported.");
-  hbwgConfig.external.beforestart(app, getback, postback, logback, logerr);
-}
+// eslint-disable-next-line no-unused-vars
+const job = schedule.scheduleJob(rule, async function () {
+  cacheimg();
+});
 
 // api default configuration
 hbwgConfig.apiconfig = {
@@ -351,14 +311,6 @@ if (
   hbwgConfig.robots = `User-agent: *
 Disallow: /`;
 }
-if (hbwgConfig.robots !== false) {
-  app.get("/robots.txt", (req, res) => {
-    res.setHeader("Content-Type", "text/plain");
-    const ip = req.headers[hbwgConfig.header] || req.connection.remoteAddress;
-    res.send(hbwgConfig.robots);
-    getback(ip, "/robots.txt");
-  });
-}
 
 if (
   typeof hbwgConfig.external === "object" &&
@@ -369,6 +321,29 @@ if (
 }
 
 // 主程序
+const app = express();
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.all("*", function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type,Content-Length, Authorization, Accept,X-Requested-With"
+  );
+  res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Credentials", "true");
+  if (req.method === "OPTIONS") res.send(200);
+  else next();
+});
+
+if (
+  typeof hbwgConfig.external === "object" &&
+  hbwgConfig.external.beforestart
+) {
+  logback("Initialization configuration has been imported.");
+  hbwgConfig.external.beforestart(app, getback, postback, logback, logerr);
+}
+
 app.get("/", (req, res) => {
   const ip = req.headers[hbwgConfig.header] || req.connection.remoteAddress;
   if (typeof hbwgConfig.rootprogram === "function") {
@@ -379,6 +354,15 @@ app.get("/", (req, res) => {
     );
   getback(ip, "/");
 });
+
+if (hbwgConfig.robots !== false) {
+  app.get("/robots.txt", (req, res) => {
+    res.setHeader("Content-Type", "text/plain");
+    const ip = req.headers[hbwgConfig.header] || req.connection.remoteAddress;
+    res.send(hbwgConfig.robots);
+    getback(ip, "/robots.txt");
+  });
+}
 
 if (hbwgConfig.apiconfig.getimage) {
   app.get(hbwgConfig.apiconfig.getimage, (req, res) => {
@@ -574,8 +558,13 @@ if (hbwgConfig.apiconfig.debug.url) {
 // delete external cache
 hbwgConfig.external = undefined;
 
-app.listen(hbwgConfig.port, () => {
-  logback(
-    `heStudio BingWallpaper Get is running on localhost:${hbwgConfig.port}`
-  );
-});
+app
+  .listen(hbwgConfig.port, () => {
+    logback(
+      `heStudio BingWallpaper Get is running on localhost:${hbwgConfig.port}`
+    );
+  })
+  .on("error", (err) => {
+    logerr(`server: ${err}`);
+    process.exit(1);
+  });
