@@ -1,3 +1,6 @@
+### 1.4.6
+1. external.refreshtask: Fix the problem of code structure update causing large-scale error reporting of scheduled tasks.
+
 ### 1.4.5
 1. external.refreshtask: Fix an issue where scheduled tasks have stopped running even though they haven't finished running yet.
 2. server.getupdate: Optimize the error-throwing mechanism when checking for updates.
