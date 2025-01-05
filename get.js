@@ -1,5 +1,5 @@
 require("dotenv").config();
-const VERSION = "1.4.5";
+const VERSION = "1.4.6";
 
 const express = require("express");
 const schedule = require("node-schedule");
@@ -185,15 +185,6 @@ if (
 }
 
 function cacheimg() {
-  if (typeof hbwgConfig.refreshtask === "function") {
-    try {
-      logwarn("task is running...");
-      hbwgConfig.refreshtask();
-      logwarn("task is finish.");
-    } catch (e) {
-      logerr(`refreshtask: ${e}`);
-    }
-  }
   if (hbwgConfig.getupdate !== false) {
     const requestOptions = {
       method: "GET",
@@ -206,7 +197,7 @@ function cacheimg() {
     }
     fetch(hbwgConfig.packageurl, requestOptions)
       .then((response) => response.json())
-      .then((result) => AfterGetVersion(result))
+      .then(async (result) => await AfterGetVersion(result))
       .catch((error) => logerr(`getupdate: ${error}`));
   }
   fetch(hbwgConfig.api, {
@@ -214,14 +205,14 @@ function cacheimg() {
     redirect: "follow",
   })
     .then((response) => response.json())
-    .then((result) => {
+    .then(async (result) => {
       hbwgConfig.bingsrc = result;
       const url = hbwgConfig.host + result.images[0].url;
-      fetch(url, {
+      await fetch(url, {
         method: "GET",
       })
-        .then((response) => {
-          response.arrayBuffer().then(async (buffer) => {
+        .then(async (response) => {
+          await response.arrayBuffer().then(async (buffer) => {
             await (hbwgConfig.image = Buffer.from(buffer));
           });
         })
@@ -230,8 +221,21 @@ function cacheimg() {
       hbwgConfig.copyrightlink = String(result.images[0].copyrightlink);
       hbwgConfig.title = String(result.images[0].title);
     })
-    .catch((error) => logerr(`source.bingsrc: ${error}`));
-
+    .catch((error) => {
+      logerr(`source.bingsrc: ${error}`);
+      if (hbwgConfig.image == undefined) {
+        process.exit(1);
+      }
+    });
+    if (typeof hbwgConfig.refreshtask === "function") {
+      try {
+        logwarn("task is running...");
+        hbwgConfig.refreshtask();
+        logwarn("task is finish.");
+      } catch (e) {
+        logerr(`refreshtask: ${e}`);
+      }
+    }
   logback("Refresh Successfully!");
 }
 
