@@ -1,3 +1,10 @@
+### 1.4.7
+1. external.refreshtask.allow_refreshtask_with_fail: Users can choose whether to allow scheduled tasks to run even when they fail. The default setting is `false`.
+2. external.refreshtask: Optimized the execution logic of the `refreshtask` function interface.
+3. server: Optimized the program startup logic.
+4. external.refreshtask: Fixed an issue where running `refreshtask` before the data update was completed caused the script to fail to retrieve the latest data.
+
+
 ### 1.4.6
 1. external.refreshtask: Fix the problem of code structure update causing large-scale error reporting of scheduled tasks.
 

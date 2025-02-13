@@ -1,5 +1,5 @@
 require("dotenv").config();
-const VERSION = "1.4.6";
+const VERSION = "1.4.7";
 
 const express = require("express");
 const schedule = require("node-schedule");
@@ -14,27 +14,6 @@ console.log(
     "YYYY-MM-DD HH:mm:ss"
   )}] heStudio BingWallpaper Get version: ${VERSION}`
 );
-
-const hbwgConfig = {};
-
-// hbwg_tempdir
-if (process.env.hbwg_tempdir) hbwgConfig.tempDir = process.env.hbwg_tempdir;
-else hbwgConfig.tempDir = `${process.cwd()}/tmp`;
-
-// check tempdir
-if (!fs.existsSync(hbwgConfig.tempDir)) {
-  fs.mkdirSync(hbwgConfig.tempDir);
-  fs.writeFileSync(`${hbwgConfig.tempDir}/.version.hbwg_cache`, VERSION);
-} else {
-  if (
-    !fs.existsSync(`${hbwgConfig.tempDir}/.version.hbwg_cache`) ||
-    fs.readFileSync(`${hbwgConfig.tempDir}/.version.hbwg_cache`) != VERSION
-  ) {
-    fs.rmSync(hbwgConfig.tempDir, { recursive: true, force: true });
-    fs.mkdirSync(hbwgConfig.tempDir);
-    fs.writeFileSync(`${hbwgConfig.tempDir}/.version.hbwg_cache`, VERSION);
-  }
-}
 
 /**
  * Record GET request log
@@ -72,6 +51,27 @@ const logerr = (err) =>
  */
 const logwarn = (warn) =>
   console.warn(`[${dayjs().format("YYYY-MM-DD HH:mm:ss")}] WARN: ${warn}`);
+
+const hbwgConfig = {};
+
+// hbwg_tempdir
+if (process.env.hbwg_tempdir) hbwgConfig.tempDir = process.env.hbwg_tempdir;
+else hbwgConfig.tempDir = `${process.cwd()}/tmp`;
+
+// check tempdir
+if (!fs.existsSync(hbwgConfig.tempDir)) {
+  fs.mkdirSync(hbwgConfig.tempDir);
+  fs.writeFileSync(`${hbwgConfig.tempDir}/.version.hbwg_cache`, VERSION);
+} else {
+  if (
+    !fs.existsSync(`${hbwgConfig.tempDir}/.version.hbwg_cache`) ||
+    fs.readFileSync(`${hbwgConfig.tempDir}/.version.hbwg_cache`) != VERSION
+  ) {
+    fs.rmSync(hbwgConfig.tempDir, { recursive: true, force: true });
+    fs.mkdirSync(hbwgConfig.tempDir);
+    fs.writeFileSync(`${hbwgConfig.tempDir}/.version.hbwg_cache`, VERSION);
+  }
+}
 
 // hbwg_port
 if (process.env.hbwg_port) hbwgConfig.port = Number(process.env.hbwg_port);
@@ -182,9 +182,36 @@ if (
   hbwgConfig.external.refreshtask
 ) {
   hbwgConfig.refreshtask = hbwgConfig.external.refreshtask;
+  if (typeof hbwgConfig.external.AllowRefreshtaskWithFail === "boolean") {
+    hbwgConfig.AllowRefreshtaskWithFail =
+      hbwgConfig.external.AllowRefreshtaskWithFail;
+  } else {
+    hbwgConfig.AllowRefreshtaskWithFail = false;
+  }
 }
 
 function cacheimg() {
+  function RunTask(status) {
+    function Task() {
+      if (typeof hbwgConfig.refreshtask === "function") {
+        try {
+          logwarn("task is running...");
+          hbwgConfig.refreshtask();
+          logwarn("task is finish.");
+        } catch (e) {
+          logerr(`refreshtask: ${e}`);
+        }
+      }
+    }
+    if (status) Task();
+    else {
+      if (hbwgConfig.AllowRefreshtaskWithFail) Task();
+      else
+        logwarn(
+          "Because the regular update of the data was not completed, according to the policy you set up, we did not run your customized scheduler."
+        );
+    }
+  }
   if (hbwgConfig.getupdate !== false) {
     const requestOptions = {
       method: "GET",
@@ -212,30 +239,31 @@ function cacheimg() {
         method: "GET",
       })
         .then(async (response) => {
-          await response.arrayBuffer().then(async (buffer) => {
-            await (hbwgConfig.image = Buffer.from(buffer));
-          });
+          await response
+            .arrayBuffer()
+            .then(async (buffer) => {
+              await (hbwgConfig.image = Buffer.from(buffer));
+              RunTask(true);
+            })
+            .catch(() => {
+              RunTask(false);
+            });
         })
-        .catch((error) => logerr(`api.getimage: ${error}`));
+        .catch((error) => {
+          logerr(`api.getimage: ${error}`);
+          RunTask(false);
+        });
       hbwgConfig.copyright = String(result.images[0].copyright);
       hbwgConfig.copyrightlink = String(result.images[0].copyrightlink);
       hbwgConfig.title = String(result.images[0].title);
     })
     .catch((error) => {
       logerr(`source.bingsrc: ${error}`);
+      RunTask(false);
       if (hbwgConfig.image == undefined) {
         process.exit(1);
       }
     });
-    if (typeof hbwgConfig.refreshtask === "function") {
-      try {
-        logwarn("task is running...");
-        hbwgConfig.refreshtask();
-        logwarn("task is finish.");
-      } catch (e) {
-        logerr(`refreshtask: ${e}`);
-      }
-    }
   logback("Refresh Successfully!");
 }
 
