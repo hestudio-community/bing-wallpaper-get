@@ -1,3 +1,7 @@
+### 1.4.8
+1. external.refreshtask.allow_refreshtask_with_fail: We moved the position of the `AllowRefreshtaskWithFail` switch, see the documentation for details.
+2. server: Upgraded dependency library to fix GHSA-xffm-g5w8-qvg7.
+
 ### 1.4.7
 1. external.refreshtask.allow_refreshtask_with_fail: Users can choose whether to allow scheduled tasks to run even when they fail. The default setting is `false`.
 2. external.refreshtask: Optimized the execution logic of the `refreshtask` function interface.
