@@ -1,5 +1,5 @@
-require("dotenv").config();
-const VERSION = "1.4.7";
+require("dotenv").config({ quiet: true, path: `${process.cwd()}/.env` });
+const VERSION = "1.4.8";
 
 const express = require("express");
 const schedule = require("node-schedule");
@@ -8,6 +8,7 @@ const fs = require("fs");
 const dayjs = require("dayjs");
 const crypto = require("node:crypto");
 const bodyParser = require("body-parser");
+const cors = require("cors");
 
 console.log(
   `[${dayjs().format(
@@ -177,16 +178,28 @@ if (
 }
 
 // refreshtask
-if (
-  typeof hbwgConfig.external === "object" &&
-  hbwgConfig.external.refreshtask
-) {
-  hbwgConfig.refreshtask = hbwgConfig.external.refreshtask;
-  if (typeof hbwgConfig.external.AllowRefreshtaskWithFail === "boolean") {
-    hbwgConfig.AllowRefreshtaskWithFail =
-      hbwgConfig.external.AllowRefreshtaskWithFail;
-  } else {
+if (typeof hbwgConfig.external === "object") {
+  if (typeof hbwgConfig.external.refreshtask === "function") {
+    hbwgConfig.refreshtask = hbwgConfig.external.refreshtask;
     hbwgConfig.AllowRefreshtaskWithFail = false;
+  } else if (typeof hbwgConfig.external.refreshtask === "object") {
+    if (typeof hbwgConfig.external.refreshtask.refreshtask === "function") {
+      hbwgConfig.refreshtask = hbwgConfig.external.refreshtask.refreshtask;
+      if (
+        typeof hbwgConfig.external.refreshtask.AllowRefreshtaskWithFail ===
+        "boolean"
+      ) {
+        hbwgConfig.AllowRefreshtaskWithFail =
+          hbwgConfig.external.refreshtask.AllowRefreshtaskWithFail;
+      } else {
+        hbwgConfig.AllowRefreshtaskWithFail = false;
+      }
+    } else {
+      logerr(
+        "The refreshtask configuration is not a function, please check your external.js file."
+      );
+      process.exit(1);
+    }
   }
 }
 
@@ -356,17 +369,7 @@ if (
 const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.all("*", function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Content-Type,Content-Length, Authorization, Accept,X-Requested-With"
-  );
-  res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Credentials", "true");
-  if (req.method === "OPTIONS") res.send(200);
-  else next();
-});
+app.use(cors());
 
 if (
   typeof hbwgConfig.external === "object" &&
@@ -519,6 +522,7 @@ if (hbwgConfig.apiconfig.debug.url) {
         <p>Request header for getting IP: ${hbwgConfig.header}</p>
         <p>Temp Dir: ${hbwgConfig.tempDir}</p>
         <p>robots.txt: ${hbwgConfig.robots}</p>
+        <p>AllowRefreshtaskWithFail: ${hbwgConfig.AllowRefreshtaskWithFail}</p>
       </div>
     </div>
     <div>
