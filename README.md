@@ -23,8 +23,8 @@ GET /gettitle
 Return parameters:
 
 | Parameters | Description |
-|---|---|
-| `title` | title |
+| ---------- | ----------- |
+| `title`    | title       |
 
 #### Get image copyright information
 
@@ -34,9 +34,9 @@ GET /getcopyright
 
 Return parameters:
 
-| Parameters | Description |
-|---|---|
-| `copyright` | Copyright information |
+| Parameters      | Description                                         |
+| --------------- | --------------------------------------------------- |
+| `copyright`     | Copyright information                               |
 | `copyrightlink` | The link corresponding to the copyright information |
 
 ### installation method

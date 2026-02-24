@@ -1,12 +1,12 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "node-terminal",
-            "name": "Run API",
-            "request": "launch",
-            "command": "pnpm run server",
-            "cwd": "${workspaceFolder}"
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node-terminal",
+      "name": "Run API",
+      "request": "launch",
+      "command": "pnpm run server",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
 }
