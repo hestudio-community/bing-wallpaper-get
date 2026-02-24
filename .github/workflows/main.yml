@@ -3,7 +3,11 @@ name: Publish
 on:
   push:
     tags:
-      - '*'
+      - "*"
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   publish:
@@ -14,28 +18,24 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 20
-          registry-url: 'https://registry.npmjs.org/'
+          registry-url: "https://registry.npmjs.org/"
       - name: Install dependencies
         run: yarn install
       - name: Publish package
         run: npm publish
-        env: 
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   build:
-
     runs-on: ubuntu-latest
-    name:  Build Docker Image
+    name: Build Docker Image
     needs: publish
     steps:
-    - uses: actions/checkout@v3
-    - name: Get version
-      id: get_version
-      run: echo "::set-output name=tag::$(echo "${{ github.REF }}" | sed -e 's|^refs/tags/||')"
-    - name: Login Docker
-      run: docker login --username hestudio --password ${{ secrets.DOCKER_PASSWORD }}
-    - run: docker build . --file Dockerfile --tag hestudio/bingwallpaper_get:${{ steps.get_version.outputs.tag }}
-    - run: docker build . --file Dockerfile --tag hestudio/bingwallpaper_get
-    - run: docker push hestudio/bingwallpaper_get:${{ steps.get_version.outputs.tag }}
-    - run: docker push hestudio/bingwallpaper_get
-    
+      - uses: actions/checkout@v3
+      - name: Get version
+        id: get_version
+        run: echo "::set-output name=tag::$(echo "${{ github.REF }}" | sed -e 's|^refs/tags/||')"
+      - name: Login Docker
+        run: docker login --username hestudio --password ${{ secrets.DOCKER_PASSWORD }}
+      - run: docker build . --file Dockerfile --tag hestudio/bingwallpaper_get:${{ steps.get_version.outputs.tag }}
+      - run: docker build . --file Dockerfile --tag hestudio/bingwallpaper_get
+      - run: docker push hestudio/bingwallpaper_get:${{ steps.get_version.outputs.tag }}
+      - run: docker push hestudio/bingwallpaper_get
