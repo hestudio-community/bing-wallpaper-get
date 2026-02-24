@@ -1,5 +1,5 @@
 require("dotenv").config({ quiet: true, path: `${process.cwd()}/.env` });
-const VERSION = "1.4.8";
+const VERSION = "1.4.9";
 
 const express = require("express");
 const schedule = require("node-schedule");
@@ -12,8 +12,8 @@ const cors = require("cors");
 
 console.log(
   `[${dayjs().format(
-    "YYYY-MM-DD HH:mm:ss"
-  )}] heStudio BingWallpaper Get version: ${VERSION}`
+    "YYYY-MM-DD HH:mm:ss",
+  )}] heStudio BingWallpaper Get version: ${VERSION}`,
 );
 
 /**
@@ -124,11 +124,11 @@ function LoadExternal(path) {
       `npx uglifyjs ${path} -m -o ${hbwgConfig.tempDir}/external.min.js`,
       {
         cwd: __dirname,
-      }
+      },
     );
     fs.writeFileSync(
       `${hbwgConfig.tempDir}/.external.hbwg_cahce`,
-      HashVerify()
+      HashVerify(),
     );
   }
 
@@ -196,7 +196,7 @@ if (typeof hbwgConfig.external === "object") {
       }
     } else {
       logerr(
-        "The refreshtask configuration is not a function, please check your external.js file."
+        "The refreshtask configuration is not a function, please check your external.js file.",
       );
       process.exit(1);
     }
@@ -221,7 +221,7 @@ function cacheimg() {
       if (hbwgConfig.AllowRefreshtaskWithFail) Task();
       else
         logwarn(
-          "Because the regular update of the data was not completed, according to the policy you set up, we did not run your customized scheduler."
+          "Because the regular update of the data was not completed, according to the policy you set up, we did not run your customized scheduler.",
         );
     }
   }
@@ -306,15 +306,15 @@ if (
   if (typeof hbwgConfig.external.api.rename === "object") {
     if (typeof hbwgConfig.external.api.rename.getimage === "string")
       hbwgConfig.apiconfig.getimage = String(
-        hbwgConfig.external.api.rename.getimage
+        hbwgConfig.external.api.rename.getimage,
       );
     if (typeof hbwgConfig.external.api.rename.gettitle === "string")
       hbwgConfig.apiconfig.gettitle = String(
-        hbwgConfig.external.api.rename.gettitle
+        hbwgConfig.external.api.rename.gettitle,
       );
     if (typeof hbwgConfig.external.api.rename.getcopyright === "string")
       hbwgConfig.apiconfig.getcopyright = String(
-        hbwgConfig.external.api.rename.getcopyright
+        hbwgConfig.external.api.rename.getcopyright,
       );
   }
   // ban
@@ -385,7 +385,7 @@ app.get("/", (req, res) => {
     hbwgConfig.rootprogram(req, res, getback, logback, logerr);
   } else
     res.redirect(
-      "https://www.hestudio.net/docs/hestudio_bing_wallpaper_get.html"
+      "https://www.hestudio.net/docs/hestudio_bing_wallpaper_get.html",
     );
   getback(ip, "/");
 });
@@ -460,7 +460,7 @@ if (typeof hbwgConfig.external === "object") {
     if (hbwgConfig.external.debug.passwd) {
       if (hbwgConfig.apiconfig.debug.method === "GET") {
         logerr(
-          "Passwords are not allowed in GET mode, please use POST instead."
+          "Passwords are not allowed in GET mode, please use POST instead.",
         );
         process.exit(1);
       } else {
@@ -597,7 +597,7 @@ hbwgConfig.external = undefined;
 app
   .listen(hbwgConfig.port, () => {
     logback(
-      `heStudio BingWallpaper Get is running on localhost:${hbwgConfig.port}`
+      `heStudio BingWallpaper Get is running on localhost:${hbwgConfig.port}`,
     );
   })
   .on("error", (err) => {
