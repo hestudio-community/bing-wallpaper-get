@@ -1,6 +1,14 @@
-FROM node:22-alpine
-ENV APP_HOME /app
+FROM --platform=linux/amd64 node:24-alpine
+ENV APP_HOME=/app
+ENV NODE_OPTIONS="--no-network-family-autoselection"
 WORKDIR $APP_HOME
-RUN npm install hestudio-bingwallpaper-get
-RUN echo "require('hestudio-bingwallpaper-get')" >> server.js
-ENTRYPOINT node $APP_HOME/server.js
+
+COPY get.js /tmp
+COPY package.json .
+COPY bun.lock .
+
+RUN npm install -g bun
+RUN bun install --production
+RUN npx uglifyjs /tmp/get.js -m -o ./get.js
+
+CMD ["node", "get.js"]

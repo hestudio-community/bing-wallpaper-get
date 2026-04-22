@@ -4,11 +4,12 @@
 
 Here's a look at how each version is supported in our program.
 
-| Version                  | Supported          |
-| ------------------------ | ------------------ |
-| 1.4.x (release versions) | :white_check_mark: |
-| 1.3.x                    | :x:                |
-| < 1.3.0                  | :x:                |
+| Version | Supported          |
+| ------- | ------------------ |
+| 1.5.x   | :white_check_mark: |
+| 1.4.x   | :white_check_mark: |
+| 1.3.x   | :x:                |
+| < 1.3.0 | :x:                |
 
 ## Reporting a Vulnerability
 

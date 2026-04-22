@@ -7,3 +7,4 @@ tmp
 .yarn
 .pnp*
 dist
+docker-compose.yml

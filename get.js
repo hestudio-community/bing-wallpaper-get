@@ -1,20 +1,25 @@
-require("dotenv").config({ quiet: true, path: `${process.cwd()}/.env` });
-const VERSION = "1.4.9";
-
 const express = require("express");
-const schedule = require("node-schedule");
+const cron = require("cron");
 const ChildProcess = require("child_process");
 const fs = require("fs");
-const dayjs = require("dayjs");
 const crypto = require("node:crypto");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const { DateTime } = require("luxon");
+const path = require("node:path");
+const dotenv = require("dotenv");
+
+const VERSION = JSON.parse(
+  fs.readFileSync(path.join(__dirname, "package.json")),
+).version;
+
+const hbwgConfig = {};
 
 console.log(
-  `[${dayjs().format(
-    "YYYY-MM-DD HH:mm:ss",
-  )}] heStudio BingWallpaper Get version: ${VERSION}`,
+  `[${DateTime.now().toISO()}] heStudio BingWallpaper Get version: ${VERSION}`,
 );
+
+hbwgConfig.timeZone = DateTime.now().zoneName;
 
 /**
  * Record GET request log
@@ -22,7 +27,7 @@ console.log(
  * @param {string} path URL path visited.
  */
 const getback = (ip, path) =>
-  console.log(`[${dayjs().format("YYYY-MM-DD HH:mm:ss")}] ${ip} GET ${path}`);
+  console.log(`[${DateTime.now().toISO()}] ${ip} GET ${path}`);
 
 /**
  * Record POST request log
@@ -30,30 +35,29 @@ const getback = (ip, path) =>
  * @param {string} path URL path visited.
  */
 const postback = (ip, path) =>
-  console.log(`[${dayjs().format("YYYY-MM-DD HH:mm:ss")}] ${ip} POST ${path}`);
+  console.log(`[${DateTime.now().toISO()}] ${ip} POST ${path}`);
 
 /**
  * Record a regular log
  * @param {string} log
  */
-const logback = (log) =>
-  console.log(`[${dayjs().format("YYYY-MM-DD HH:mm:ss")}] ${log}`);
+const logback = (log) => console.log(`[${DateTime.now().toISO()}] ${log}`);
 
 /**
  * Record error log
  * @param {string} err
  */
 const logerr = (err) =>
-  console.error(`[${dayjs().format("YYYY-MM-DD HH:mm:ss")}] ERROR: ${err}`);
+  console.error(`[${DateTime.now().toISO()}] ERROR: ${err}`);
 
 /**
  * Record warning log
  * @param {string} warn
  */
 const logwarn = (warn) =>
-  console.warn(`[${dayjs().format("YYYY-MM-DD HH:mm:ss")}] WARN: ${warn}`);
+  console.warn(`[${DateTime.now().toISO()}] WARN: ${warn}`);
 
-const hbwgConfig = {};
+dotenv.config({ quiet: true, path: `${process.cwd()}/.env` });
 
 // hbwg_tempdir
 if (process.env.hbwg_tempdir) hbwgConfig.tempDir = process.env.hbwg_tempdir;
@@ -80,7 +84,7 @@ else hbwgConfig.port = 3000;
 
 // hbwg_host
 if (process.env.hbwg_host) hbwgConfig.host = process.env.hbwg_host;
-else hbwgConfig.host = "https://cn.bing.com";
+else hbwgConfig.host = "https://www.bing.com";
 
 // hbwg_config
 if (process.env.hbwg_config)
@@ -93,9 +97,6 @@ else
 // hbwg_header
 if (process.env.hbwg_header) hbwgConfig.header = process.env.hbwg_header;
 else hbwgConfig.header = "x-forwarded-for";
-
-// 定时
-const rule = new schedule.RecurrenceRule();
 
 // Derived function
 module.exports = {
@@ -164,17 +165,19 @@ else
   hbwgConfig.packageurl =
     "https://registry.npmjs.com/hestudio-bingwallpaper-get/latest";
 
-if (
-  typeof hbwgConfig.external === "object" &&
-  hbwgConfig.external.refreshtime
-) {
+if (typeof hbwgConfig.external === "object" && hbwgConfig.external.cron) {
   logback("Timer configuration imported.");
-  hbwgConfig.external.refreshtime(rule);
+  if (
+    typeof hbwgConfig.external.cron == "string" &&
+    cron.validateCronExpression(hbwgConfig.external.cron).valid
+  ) {
+    hbwgConfig.cron = hbwgConfig.external.cron;
+  } else {
+    logerr("Cron verification failed.");
+    process.exit(1);
+  }
 } else {
-  rule.hour = 0;
-  rule.minute = 0;
-  rule.second = 0;
-  rule.tz = "Asia/Shanghai";
+  hbwgConfig.cron = "0 0 * * *";
 }
 
 // refreshtask
@@ -280,11 +283,13 @@ function cacheimg() {
   logback("Refresh Successfully!");
 }
 
-cacheimg();
-
-// eslint-disable-next-line no-unused-vars
-const job = schedule.scheduleJob(rule, async function () {
-  cacheimg();
+const job = cron.CronJob.from({
+  cronTime: hbwgConfig.cron,
+  onTick: cacheimg,
+  start: true,
+  timeZone: hbwgConfig.timeZone,
+  runOnInit: true,
+  waitForCompletion: true,
 });
 
 // api default configuration
@@ -473,6 +478,11 @@ if (typeof hbwgConfig.external === "object") {
       }
     }
   }
+} else if (process.env.hbwg_debug == "true") {
+  logwarn("Debug Mode is enable with env!");
+  hbwgConfig.apiconfig.debug = {};
+  hbwgConfig.apiconfig.debug.url = "/debug";
+  hbwgConfig.apiconfig.debug.method = "GET";
 }
 
 if (hbwgConfig.apiconfig.debug.url) {
@@ -487,6 +497,7 @@ if (hbwgConfig.apiconfig.debug.url) {
 
 <body>
   <h1>Debug Information</h1>
+  <p>Generate Time: ${DateTime.now().toISO()}</p>
   <div>
     <div>
       <h3>API URL Configurations</h3>
@@ -514,6 +525,16 @@ if (hbwgConfig.apiconfig.debug.url) {
       </div>
     </div>
     <div>
+      <h3>Cron Configurations</h3>
+      <div>
+        <p>Cron: ${hbwgConfig.cron}</p>
+        <p>Last Execution Time: ${DateTime.fromJSDate(job.lastDate()).toISO()}
+        <p>Next Execution Time: ${job.nextDate().toISO()}
+        <p>TZ: ${hbwgConfig.timeZone}</p>
+        <p>AllowRefreshtaskWithFail: ${typeof hbwgConfig.AllowRefreshtaskWithFail == "boolean" ? hbwgConfig.AllowRefreshtaskWithFail : false}</p>
+      </div>
+    </div>
+    <div>
       <h3>Server Configurations</h3>
       <div>
         <p>Port: ${hbwgConfig.port}</p>
@@ -522,13 +543,11 @@ if (hbwgConfig.apiconfig.debug.url) {
         <p>Request header for getting IP: ${hbwgConfig.header}</p>
         <p>Temp Dir: ${hbwgConfig.tempDir}</p>
         <p>robots.txt: ${hbwgConfig.robots}</p>
-        <p>AllowRefreshtaskWithFail: ${hbwgConfig.AllowRefreshtaskWithFail}</p>
       </div>
     </div>
     <div>
       <h3>For Developer</h3>
       <div>
-        <p>TZ: ${process.env.TZ}</p>
         <p>Program Version: ${VERSION}</p>
         <p>Latest Version: ${hbwgConfig.version}</p>
         <p>Running Dir: ${process.cwd()}</p>
@@ -539,7 +558,9 @@ if (hbwgConfig.apiconfig.debug.url) {
         <p>Arch Information: ${process.arch}</p>
         <p>Platform Information: ${process.platform}</p>
         <p>PID: ${process.pid}</p>
-        <p>Memory Usage: ${process.memoryUsage().rss / 1048576} MB</p>
+        <p>CronJob isActive: ${job.isActive}</p>
+        <p>CronJob isCallbackRunning: ${job.isCallbackRunning}</p>
+        <p>Memory Usage: ${process.memoryUsage().rss / 1000000} MB</p>
         <p>Resource Usage ${JSON.stringify(process.resourceUsage())}</p>
       </div>
     </div>
