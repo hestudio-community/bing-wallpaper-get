@@ -2,6 +2,7 @@
 1. server.corn: Switch the timer tool from node-schedule to corn.
 2. server.log: A time zone record has been added to the timestamps in the log.
 3. server: We replaced dayjs with luxon, which brings a unified timezone management mechanism.
+4. api: You can now pass through cron via external.js.
 
 ### 1.4.9
 1. server: Upgraded dependency library.
@@ -15,7 +16,6 @@
 2. external.refreshtask: Optimized the execution logic of the `refreshtask` function interface.
 3. server: Optimized the program startup logic.
 4. external.refreshtask: Fixed an issue where running `refreshtask` before the data update was completed caused the script to fail to retrieve the latest data.
-
 
 ### 1.4.6
 1. external.refreshtask: Fix the problem of code structure update causing large-scale error reporting of scheduled tasks.

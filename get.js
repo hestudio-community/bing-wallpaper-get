@@ -374,7 +374,16 @@ if (
 const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(cors());
+if (typeof hbwgConfig.external.cors != "undefined") {
+  if (typeof hbwgConfig.external.cors != "object") {
+    logerr("CORS must be object.");
+    process.exit(1);
+  } else {
+    hbwgConfig.cors = hbwgConfig.external.cors;
+    logback("Custom CORS has been loaded.");
+  }
+}
+app.use(cors(hbwgConfig.cors));
 
 if (
   typeof hbwgConfig.external === "object" &&
@@ -543,6 +552,7 @@ if (hbwgConfig.apiconfig.debug.url) {
         <p>Request header for getting IP: ${hbwgConfig.header}</p>
         <p>Temp Dir: ${hbwgConfig.tempDir}</p>
         <p>robots.txt: ${hbwgConfig.robots}</p>
+        <p>CORS: ${typeof hbwgConfig.cors == "undefined" ? "undefined" : JSON.stringify(hbwgConfig.cors)}</p>
       </div>
     </div>
     <div>
