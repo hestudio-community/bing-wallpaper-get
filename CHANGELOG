@@ -3,6 +3,7 @@
 2. server.log: A time zone record has been added to the timestamps in the log.
 3. server: We replaced dayjs with luxon, which brings a unified timezone management mechanism.
 4. (breaking change)api: You can now pass through cors via external.js.
+5. server: Switch the base toolchain to bun.
 
 ### 1.4.9
 1. server: Upgraded dependency library.

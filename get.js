@@ -122,7 +122,7 @@ function LoadExternal(path) {
 
   function CacheCreate() {
     ChildProcess.execSync(
-      `npx uglifyjs ${path} -m -o ${hbwgConfig.tempDir}/external.min.js`,
+      `bunx uglifyjs ${path} -m -o ${hbwgConfig.tempDir}/external.min.js`,
       {
         cwd: __dirname,
       },
