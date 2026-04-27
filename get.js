@@ -374,7 +374,10 @@ if (
 const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-if (typeof hbwgConfig.external.cors != "undefined") {
+if (
+  typeof hbwgConfig.external !== "undefined" &&
+  typeof hbwgConfig.external.cors != "undefined"
+) {
   if (typeof hbwgConfig.external.cors != "object") {
     logerr("CORS must be object.");
     process.exit(1);

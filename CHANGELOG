@@ -1,8 +1,8 @@
 ### 1.5.0
-1. server.corn: Switch the timer tool from node-schedule to corn.
+1. (breaking change)server.cron: Switch the timer tool from node-schedule to cron.
 2. server.log: A time zone record has been added to the timestamps in the log.
 3. server: We replaced dayjs with luxon, which brings a unified timezone management mechanism.
-4. api: You can now pass through cron via external.js.
+4. (breaking change)api: You can now pass through cors via external.js.
 
 ### 1.4.9
 1. server: Upgraded dependency library.

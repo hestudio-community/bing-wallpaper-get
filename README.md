@@ -53,12 +53,12 @@ docker run -d -p 3000:3000 hestudio/bingwallpaper_get
 ```sh
 git clone https://github.com/hestudio-community/bing-wallpaper-get.git
 cd bing-wallpaper-get
-npm install --global pnpm
-pnpm install
-pnpm run server
+npm install --global bun
+bun install
+bun run server
 ```
 
-> We will use `pnpm` as the package manager after version 1.3.2. If you deploy in this way, please switch in time to avoid any impact.
+> We will use `bun` as the package manager after version 1.5.0. If you deploy in this way, please switch in time to avoid any impact.
 
 #### Install and run via NPM
 
