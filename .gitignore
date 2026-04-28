@@ -8,3 +8,4 @@ tmp
 .pnp*
 dist
 docker-compose.yml
+.DS_Store

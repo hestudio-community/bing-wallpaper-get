@@ -5,7 +5,7 @@
       "type": "node-terminal",
       "name": "Run API",
       "request": "launch",
-      "command": "pnpm run server",
+      "command": "bun run server",
       "cwd": "${workspaceFolder}"
     }
   ]

@@ -4,6 +4,10 @@
 3. server: We replaced dayjs with luxon, which brings a unified timezone management mechanism.
 4. (breaking change)api: You can now pass through cors via external.js.
 5. server: Switch the base toolchain to bun.
+6. (breaking change)server: Move the port setting to external.js.  
+7. (breaking change)source.bingsource.origin: Move the Bing Origin setting to external.js.  
+8. (breaking change)source.bingsource.config: Parameterize the Bing custom request parameters and move them to external.js.
+9. (breaking change)server.getupdate.packageurl: Move the packageurl configuration to external.js.
 
 ### 1.4.9
 1. server: Upgraded dependency library.

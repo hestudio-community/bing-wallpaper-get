@@ -78,26 +78,6 @@ if (!fs.existsSync(hbwgConfig.tempDir)) {
   }
 }
 
-// hbwg_port
-if (process.env.hbwg_port) hbwgConfig.port = Number(process.env.hbwg_port);
-else hbwgConfig.port = 3000;
-
-// hbwg_host
-if (process.env.hbwg_host) hbwgConfig.host = process.env.hbwg_host;
-else hbwgConfig.host = "https://www.bing.com";
-
-// hbwg_config
-if (process.env.hbwg_config)
-  hbwgConfig.api =
-    hbwgConfig.host + "/HPImageArchive.aspx?" + process.env.hbwg_config;
-else
-  hbwgConfig.api =
-    hbwgConfig.host + "/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN";
-
-// hbwg_header
-if (process.env.hbwg_header) hbwgConfig.header = process.env.hbwg_header;
-else hbwgConfig.header = "x-forwarded-for";
-
 // Derived function
 module.exports = {
   getback,
@@ -122,7 +102,7 @@ function LoadExternal(path) {
 
   function CacheCreate() {
     ChildProcess.execSync(
-      `bunx uglifyjs ${path} -m -o ${hbwgConfig.tempDir}/external.min.js`,
+      `npx uglifyjs ${path} -m -o ${hbwgConfig.tempDir}/external.min.js`,
       {
         cwd: __dirname,
       },
@@ -151,6 +131,50 @@ if (process.env.hbwg_external) LoadExternal(process.env.hbwg_external);
 else if (fs.existsSync("./external.js"))
   LoadExternal(`${process.cwd()}/external.js`);
 
+// port
+if (
+  typeof hbwgConfig.external != "undefined" &&
+  typeof hbwgConfig.external.port == "number"
+)
+  hbwgConfig.port = hbwgConfig.external.port;
+else hbwgConfig.port = 3000;
+
+// bingorigin
+if (
+  typeof hbwgConfig.external != "undefined" &&
+  typeof hbwgConfig.external.bingorigin == "string"
+)
+  try {
+    hbwgConfig.bingorigin = new URL(hbwgConfig.external.bingorigin).origin;
+  } catch (e) {
+    if (e.code == "ERR_INVALID_URL") {
+      logerr("Please configure the correct Bing URL Origin.");
+      process.exit(1);
+    }
+  }
+else hbwgConfig.bingorigin = "https://www.bing.com";
+
+// bingregion
+if (
+  typeof hbwgConfig.external != "undefined" &&
+  typeof hbwgConfig.external.bingregion == "string"
+)
+  hbwgConfig.api =
+    hbwgConfig.bingorigin +
+    `/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=${hbwgConfig.external.bingregion}`;
+else
+  hbwgConfig.api =
+    hbwgConfig.bingorigin +
+    "/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US";
+
+// cdn_header
+if (
+  typeof hbwgConfig.external != "undefined" &&
+  typeof hbwgConfig.external.cdn_header == "string"
+)
+  hbwgConfig.header = hbwgConfig.external.cdn_header;
+else hbwgConfig.header = null;
+
 // 1.3.0 Version update prompt
 if (
   typeof hbwgConfig.external === "object" &&
@@ -159,8 +183,11 @@ if (
   hbwgConfig.getupdate = false;
 else hbwgConfig.getupdate = true;
 
-if (process.env.hbwg_packageurl)
-  hbwgConfig.packageurl = process.env.hbwg_packageurl;
+if (
+  typeof hbwgConfig.external != "undefined" &&
+  typeof hbwgConfig.external.packageurl == "string"
+)
+  hbwgConfig.packageurl = hbwgConfig.external.packageurl;
 else
   hbwgConfig.packageurl =
     "https://registry.npmjs.com/hestudio-bingwallpaper-get/latest";
@@ -250,7 +277,7 @@ function cacheimg() {
     .then((response) => response.json())
     .then(async (result) => {
       hbwgConfig.bingsrc = result;
-      const url = hbwgConfig.host + result.images[0].url;
+      const url = hbwgConfig.bingorigin + result.images[0].url;
       await fetch(url, {
         method: "GET",
       })
