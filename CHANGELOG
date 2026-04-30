@@ -8,6 +8,8 @@
 7. (breaking change)source.bingsource.origin: Move the Bing Origin setting to external.js.  
 8. (breaking change)source.bingsource.config: Parameterize the Bing custom request parameters and move them to external.js.
 9. (breaking change)server.getupdate.packageurl: Move the packageurl configuration to external.js.
+10. api: Support passing the `index` parameter to access images and metadata from the last 8 days.
+11. server: The HTTP Server will now only start running after the first refresh task is completed.
 
 ### 1.4.9
 1. server: Upgraded dependency library.

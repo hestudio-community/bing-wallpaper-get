@@ -161,11 +161,11 @@ if (
 )
   hbwgConfig.api =
     hbwgConfig.bingorigin +
-    `/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=${hbwgConfig.external.bingregion}`;
+    `/HPImageArchive.aspx?format=js&idx=0&n=8&mkt=${hbwgConfig.external.bingregion}`;
 else
   hbwgConfig.api =
     hbwgConfig.bingorigin +
-    "/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US";
+    "/HPImageArchive.aspx?format=js&idx=0&n=8&mkt=en-US";
 
 // cdn_header
 if (
@@ -233,7 +233,7 @@ if (typeof hbwgConfig.external === "object") {
   }
 }
 
-function cacheimg() {
+async function cacheimg() {
   function RunTask(status) {
     function Task() {
       if (typeof hbwgConfig.refreshtask === "function") {
@@ -265,54 +265,52 @@ function cacheimg() {
       if (hbwgConfig.version !== VERSION)
         logwarn(`New Version! ${hbwgConfig.version} is ready.`);
     }
-    fetch(hbwgConfig.packageurl, requestOptions)
+    await fetch(hbwgConfig.packageurl, requestOptions)
       .then((response) => response.json())
       .then(async (result) => await AfterGetVersion(result))
       .catch((error) => logerr(`getupdate: ${error}`));
   }
-  fetch(hbwgConfig.api, {
+
+  await fetch(hbwgConfig.api, {
     method: "GET",
     redirect: "follow",
   })
     .then((response) => response.json())
     .then(async (result) => {
       hbwgConfig.bingsrc = result;
-      const url = hbwgConfig.bingorigin + result.images[0].url;
-      await fetch(url, {
-        method: "GET",
-      })
-        .then(async (response) => {
-          await response
-            .arrayBuffer()
-            .then(async (buffer) => {
-              await (hbwgConfig.image = Buffer.from(buffer));
-              RunTask(true);
-            })
-            .catch(() => {
-              RunTask(false);
-            });
-        })
-        .catch((error) => {
-          logerr(`api.getimage: ${error}`);
-          RunTask(false);
-        });
-      hbwgConfig.copyright = String(result.images[0].copyright);
-      hbwgConfig.copyrightlink = String(result.images[0].copyrightlink);
-      hbwgConfig.title = String(result.images[0].title);
-    })
-    .catch((error) => {
-      logerr(`source.bingsrc: ${error}`);
-      RunTask(false);
-      if (hbwgConfig.image == undefined) {
-        process.exit(1);
-      }
+      const bingImageList = hbwgConfig.bingsrc.images;
+      hbwgConfig.bingImageData = [];
+      await Promise.all(
+        bingImageList.map(async (element, index) => {
+          const url = hbwgConfig.bingorigin + element.url;
+          try {
+            const response = await fetch(url, { method: "GET" });
+            const buffer = await response.arrayBuffer();
+            hbwgConfig.bingImageData[index] = {
+              image: Buffer.from(buffer),
+              copyright: String(element.copyright),
+              copyrightlink: String(element.copyrightlink),
+              title: String(element.title),
+            };
+            logback(`Refresh Image ${index} Successfully!`);
+          } catch (error) {
+            logerr(`api.getimage: ${error}`);
+            RunTask(false);
+          }
+        }),
+      );
     });
-  logback("Refresh Successfully!");
 }
 
 const job = cron.CronJob.from({
   cronTime: hbwgConfig.cron,
-  onTick: cacheimg,
+  onTick: async () => {
+    await cacheimg();
+    if (hbwgConfig.bingImageData.length < 8) {
+      logerr("Resource retrieval failed, the program is about to exit.");
+      process.exit(1);
+    }
+  },
   start: true,
   timeZone: hbwgConfig.timeZone,
   runOnInit: true,
@@ -446,38 +444,68 @@ if (hbwgConfig.robots !== false) {
 if (hbwgConfig.apiconfig.getimage) {
   app.get(hbwgConfig.apiconfig.getimage, (req, res) => {
     const ip = req.headers[hbwgConfig.header] || req.connection.remoteAddress;
-    res.setHeader("Content-Type", "image/jpeg");
-    res.send(hbwgConfig.image);
     getback(ip, hbwgConfig.apiconfig.getimage);
+    let index;
+    try {
+      index = Number(req.query.index) || 0;
+      if (index > 7 || index < 0) {
+        res.status(202).send("Please enter an integer from 0 to 7.");
+        return;
+      }
+    } catch {
+      res.status(202).send("Please enter an integer from 0 to 7.");
+    }
+    res.setHeader("Content-Type", "image/jpeg");
+    res.send(hbwgConfig.bingImageData[index].image);
   });
 }
 
 if (hbwgConfig.apiconfig.gettitle) {
   app.get(hbwgConfig.apiconfig.gettitle, (req, res) => {
     const ip = req.headers[hbwgConfig.header] || req.connection.remoteAddress;
-    res.send({
-      title: hbwgConfig.title,
-    });
     getback(ip, hbwgConfig.apiconfig.gettitle);
+    let index;
+    try {
+      index = Number(req.query.index) || 0;
+      if (index > 7 || index < 0) {
+        res.status(202).send("Please enter an integer from 0 to 7.");
+        return;
+      }
+    } catch {
+      res.status(202).send("Please enter an integer from 0 to 7.");
+    }
+    res.send({
+      title: hbwgConfig.bingImageData[index].title,
+    });
   });
 }
 
 if (hbwgConfig.apiconfig.getcopyright) {
   app.get(hbwgConfig.apiconfig.getcopyright, (req, res) => {
     const ip = req.headers[hbwgConfig.header] || req.connection.remoteAddress;
-    res.send({
-      copyright: hbwgConfig.copyright,
-      copyrightlink: hbwgConfig.copyrightlink,
-    });
     getback(ip, hbwgConfig.apiconfig.getcopyright);
+    let index;
+    try {
+      index = Number(req.query.index) || 0;
+      if (index > 7 || index < 0) {
+        res.status(202).send("Please enter an integer from 0 to 7.");
+        return;
+      }
+    } catch {
+      res.status(202).send("Please enter an integer from 0 to 7.");
+    }
+    res.send({
+      copyright: hbwgConfig.bingImageData[index].copyright,
+      copyrightlink: hbwgConfig.bingImageData[index].copyrightlink,
+    });
   });
 }
 
 if (hbwgConfig.apiconfig.bingsrc) {
   app.get(hbwgConfig.apiconfig.bingsrc, (req, res) => {
     const ip = req.headers[hbwgConfig.header] || req.connection.remoteAddress;
-    res.send(hbwgConfig.bingsrc);
     getback(ip, hbwgConfig.apiconfig.bingsrc);
+    res.send(hbwgConfig.bingsrc);
   });
 }
 
@@ -556,9 +584,16 @@ if (hbwgConfig.apiconfig.debug.url) {
         </div>
         <h4>From Bing</h4>
         <div>
-          <p>Title: ${hbwgConfig.title}</p>
-          <p>Copyright: ${hbwgConfig.copyright}</p>
-          <p>Copyright Link: ${hbwgConfig.copyrightlink}</p>
+          ${hbwgConfig.bingImageData.map((element, index) => {
+            return `
+            <div>
+              <h5>Image ${index}</h5>
+              <p>Title: ${element.title}</p>
+              <p>Copyright: ${element.copyright}</p>
+              <p>Copyright Link: ${element.copyrightlink}</p>
+            </div>`;
+          })}
+          <br />
           <p>Bing Source: ${JSON.stringify(hbwgConfig.bingsrc)}</p>
         </div>
       </div>
@@ -655,13 +690,18 @@ if (hbwgConfig.apiconfig.debug.url) {
 // delete external cache
 hbwgConfig.external = undefined;
 
-app
-  .listen(hbwgConfig.port, () => {
-    logback(
-      `heStudio BingWallpaper Get is running on localhost:${hbwgConfig.port}`,
-    );
-  })
-  .on("error", (err) => {
-    logerr(`server: ${err}`);
-    process.exit(1);
-  });
+const serverReady = setInterval(() => {
+  if (!job.isCallbackRunning && hbwgConfig.bingImageData.length == 8) {
+    app
+      .listen(hbwgConfig.port, () => {
+        logback(
+          `heStudio BingWallpaper Get is running on localhost:${hbwgConfig.port}`,
+        );
+      })
+      .on("error", (err) => {
+        logerr(`server: ${err}`);
+        process.exit(1);
+      });
+      serverReady.close()
+  }
+}, 1000);
