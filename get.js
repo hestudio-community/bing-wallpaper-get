@@ -8,6 +8,7 @@ const cors = require("cors");
 const { DateTime } = require("luxon");
 const path = require("node:path");
 const dotenv = require("dotenv");
+const { gc } = require("bun");
 
 const VERSION = JSON.parse(
   fs.readFileSync(path.join(__dirname, "package.json")),
@@ -102,7 +103,7 @@ function LoadExternal(path) {
 
   function CacheCreate() {
     ChildProcess.execSync(
-      `npx uglifyjs ${path} -m -o ${hbwgConfig.tempDir}/external.min.js`,
+      `npx uglifyjs ${path} -c -m -o ${hbwgConfig.tempDir}/external.min.js`,
       {
         cwd: __dirname,
       },
@@ -280,25 +281,83 @@ async function cacheimg() {
       hbwgConfig.bingsrc = result;
       const bingImageList = hbwgConfig.bingsrc.images;
       hbwgConfig.bingImageData = [];
+      let workmode;
+      if (
+        typeof hbwgConfig.external === "object" &&
+        typeof hbwgConfig.external.mode === "string"
+      ) {
+        switch (hbwgConfig.external.mode) {
+          case "memory":
+            workmode = "memory";
+            break;
+          case "disk":
+            workmode = "disk";
+            break;
+          case "remote":
+            workmode = "remote";
+            break;
+          default:
+            workmode = "memory";
+            break;
+        }
+      } else workmode = "memory";
+      hbwgConfig.workmode = workmode;
       await Promise.all(
         bingImageList.map(async (element, index) => {
           const url = hbwgConfig.bingorigin + element.url;
-          try {
-            const response = await fetch(url, { method: "GET" });
-            const buffer = await response.arrayBuffer();
+          if (hbwgConfig.workmode == "remote") {
             hbwgConfig.bingImageData[index] = {
-              image: Buffer.from(buffer),
+              image: url,
               copyright: String(element.copyright),
               copyrightlink: String(element.copyrightlink),
               title: String(element.title),
             };
-            logback(`Refresh Image ${index} Successfully!`);
-          } catch (error) {
-            logerr(`api.getimage: ${error}`);
-            RunTask(false);
+            return;
           }
+          async function getdata() {
+            try {
+              const response = await fetch(url, { method: "GET" });
+              const buffer = await response.arrayBuffer();
+              let image;
+              switch (hbwgConfig.workmode) {
+                case "memory":
+                  image = Buffer.from(buffer);
+                  break;
+                case "disk":
+                  if (!fs.existsSync(path.join(hbwgConfig.tempDir, "images"))) {
+                    fs.mkdirSync(path.join(hbwgConfig.tempDir, "images"));
+                  }
+                  image = path.join(
+                    hbwgConfig.tempDir,
+                    "images",
+                    `${index}.png`,
+                  );
+                  fs.writeFileSync(image, buffer);
+                  break;
+              }
+              hbwgConfig.bingImageData[index] = {
+                image: image,
+                copyright: String(element.copyright),
+                copyrightlink: String(element.copyrightlink),
+                title: String(element.title),
+              };
+              logback(`Refresh Image ${index} Successfully!`);
+            } catch (error) {
+              logerr(`api.getimage: ${error}`);
+            }
+          }
+          await getdata();
         }),
-      );
+      )
+        .then(() => {
+          RunTask(true);
+        })
+        .catch(() => {
+          RunTask(false);
+        });
+    })
+    .catch(() => {
+      RunTask(false);
     });
 }
 
@@ -306,7 +365,7 @@ const job = cron.CronJob.from({
   cronTime: hbwgConfig.cron,
   onTick: async () => {
     await cacheimg();
-    if (hbwgConfig.bingImageData.length < 8) {
+    if (!hbwgConfig.bingImageData || hbwgConfig.bingImageData < 8) {
       logerr("Resource retrieval failed, the program is about to exit.");
       process.exit(1);
     }
@@ -456,7 +515,16 @@ if (hbwgConfig.apiconfig.getimage) {
       res.status(202).send("Please enter an integer from 0 to 7.");
     }
     res.setHeader("Content-Type", "image/jpeg");
-    res.send(hbwgConfig.bingImageData[index].image);
+    switch (hbwgConfig.workmode) {
+      case "memory":
+        res.send(hbwgConfig.bingImageData[index].image);
+        break;
+      case "disk":
+        res.send(fs.readFileSync(hbwgConfig.bingImageData[index].image));
+        break;
+      case "remote":
+        res.redirect(301, hbwgConfig.bingImageData[index].image);
+    }
   });
 }
 
@@ -618,6 +686,7 @@ if (hbwgConfig.apiconfig.debug.url) {
         <p>Temp Dir: ${hbwgConfig.tempDir}</p>
         <p>robots.txt: ${hbwgConfig.robots}</p>
         <p>CORS: ${typeof hbwgConfig.cors == "undefined" ? "undefined" : JSON.stringify(hbwgConfig.cors)}</p>
+        <p>Work Mode: ${hbwgConfig.workmode}</p>
       </div>
     </div>
     <div>
@@ -687,11 +756,14 @@ if (hbwgConfig.apiconfig.debug.url) {
   }
 }
 
-// delete external cache
-hbwgConfig.external = undefined;
-
 const serverReady = setInterval(() => {
-  if (!job.isCallbackRunning && hbwgConfig.bingImageData.length == 8) {
+  if (
+    !job.isCallbackRunning &&
+    typeof hbwgConfig.bingImageData != "undefined" &&
+    hbwgConfig.bingImageData.length == 8
+  ) {
+    // delete external cache
+    hbwgConfig.external = undefined;
     app
       .listen(hbwgConfig.port, () => {
         logback(
@@ -702,6 +774,7 @@ const serverReady = setInterval(() => {
         logerr(`server: ${err}`);
         process.exit(1);
       });
-      serverReady.close()
+    gc();
+    serverReady.close();
   }
 }, 1000);
